@@ -15,4 +15,4 @@ async function main() {
   console.log("✅ BCX Token déployé à :", await token.getAddress());
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => { console.error(e); process.exit(1); });  
