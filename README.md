@@ -29,7 +29,7 @@ Note réseau : Le déploiement initial a été réalisé sur Ethereum Sepolia Te
 
 
 ## Structure du projet
-bcx-finance/
+contratsmart/
 
 ├── contracts/
 
