@@ -1,32 +1,40 @@
 # BCX Token
 
-Smart Contract du **BCX Token**, le token utilitaire de l'écosystème **BCX Finance**, développé en Solidity et conforme au standard **BEP-20** sur la Binance Smart Chain (BSC).
+Smart Contract du **BCX Token**, le token utilitaire de l'écosystème **BCX Finance**, développé en Solidity et conforme au standard **BEP-20 / ERC-20** sur une blockchain compatible EVM.
 
-Le BCX Token constitue une clé d'accès aux différents services proposés par BCX Finance. Sa valeur est liée à son utilité au sein de l'écosystème et non à une logique purement spéculative.
-
-
-# Informations du Token
-
-- **Nom :** BCX Token
-- **Symbole :** BCX
-- **Standard :** BEP-20
-- **Blockchain cible :** Binance Smart Chain (BSC)
-- **Version Solidity :** 0.8.20
-- **Décimales :** 18
-- **Supply totale :** 100 000 000 BCX
-- **Mint supplémentaire :** Désactivé
-- **Burn :** Activé
-- **Lock-up Pioneer :** 365 jours
-- **Contrôle d'accès administrateur :** Oui
-- **Protection contre la réentrance :** Oui
+Le BCX Token constitue la clé d'accès aux services proposés par BCX Finance aux investisseurs. Sa valeur est liée à son utilité au sein de l'écosystème — et non à une logique purement spéculative.
 
 ---
 
-# Fonctionnalités
+## Informations du Token
 
-## Implémentation complète du standard BEP-20
+| Paramètre             | Valeur                                         |
+|-----------------------|------------------------------------------------|
+| **Nom**               | BCX Token                                      |
+| **Symbole**           | BCX                                            |
+| **Standard**          | BEP-20 / ERC-20 (compatible EVM)              |
+| **Réseau de test**    | Ethereum Sepolia Testnet                       |
+| **Réseau cible**      | Binance Smart Chain (BSC) — migration prévue  |
+| **Adresse déployée**  | `0x309A26Fc44cF5DA36E5A5d3f43ACbC8ffDB73489`  |
+| **Explorateur**       | https://sepolia.etherscan.io                   |
+| **Version Solidity**  | 0.8.20                                         |
+| **Décimales**         | 18                                             |
+| **Supply totale**     | 100 000 000 BCX                                |
+| **Mint supplémentaire** | Désactivé                                   |
+| **Burn**              | Activé                                         |
+| **Lock-up Pioneer**   | 365 jours                                      |
+| **Contrôle d'accès**  | Oui (Ownable)                                  |
+| **Protection réentrance** | Oui (ReentrancyGuard)                    |
 
-Le contrat implémente toutes les fonctions essentielles du standard BEP-20 :
+> **Note réseau** : Le déploiement initial a été réalisé sur Ethereum Sepolia Testnet car les faucets BSC Testnet exigeaient un solde minimum en BNB mainnet. Sepolia étant également compatible EVM, le comportement du smart contract est strictement identique. Une migration vers BSC ou l'intégration de QuickNode / Chainlink est prévue pour la suite du projet.
+
+---
+
+## Fonctionnalités
+
+### Standard BEP-20 / ERC-20 complet
+
+Le contrat implémente toutes les fonctions essentielles du standard :
 
 - `totalSupply()`
 - `balanceOf()`
@@ -35,230 +43,267 @@ Le contrat implémente toutes les fonctions essentielles du standard BEP-20 :
 - `allowance()`
 - `transferFrom()`
 
-Cette implémentation garantit la compatibilité du token avec les wallets, les exchanges et les applications de l'écosystème Binance Smart Chain.
+### Supply fixe
 
-
-## Supply fixe
-
-Le BCX Token possède une offre totale fixe de :
-
-```text
+```
 100 000 000 BCX
 ```
 
-La totalité des tokens est créée lors du déploiement du contrat.
+La totalité des tokens est créée lors du déploiement. Aucune fonction `mint` supplémentaire n'est présente.
 
-Aucune fonction de création supplémentaire (`mint`) n'est présente afin de garantir une émission contrôlée et transparente.
+### Mécanisme de Burn
 
+Le contrat permet la destruction définitive des tokens :
 
-## Mécanisme de Burn
+- `burn()` — réduit le solde et la supply totale
+- `burnFrom()` — burn depuis une allowance approuvée
 
-Le contrat permet la destruction définitive des tokens.
+### Système de Lock-up des Pionniers
 
-Fonctions disponibles :
+Mécanisme de verrouillage des tokens pour les investisseurs de niveau Pionnier :
 
-- `burn()`
-- `burnFrom()`
-
-Chaque opération de burn :
-
-- réduit le solde du détenteur ;
-- diminue la supply totale ;
-- est enregistrée sur la blockchain.
-
-
-## Système de Lock-up des Pionniers
-
-Le contrat intègre un mécanisme de verrouillage des tokens destiné aux Pionniers.
-
-Caractéristiques :
-
-- durée minimale de 365 jours ;
-- les tokens verrouillés ne peuvent ni être transférés ni être brûlés ;
-- déverrouillage uniquement après expiration de la période définie.
+- Durée minimale de 365 jours
+- Les tokens verrouillés ne peuvent ni être transférés ni être brûlés
+- Déverrouillage uniquement après expiration
 
 Fonctions associées :
+- `lockTokens(address, amount, duration)`
+- `unlockTokens(address)`
+- `getLockInfo(address)`
+- `availableBalance(address)`
 
-- `lockTokens()`
-- `unlockTokens()`
-- `getLockInfo()`
-- `availableBalance()`
-
-
-## Gestion des autorisations
-
-Le contrat prend en charge :
+### Gestion des autorisations
 
 - `approve()`
 - `increaseAllowance()`
 - `decreaseAllowance()`
 - `transferFrom()`
 
-Des mécanismes supplémentaires sont mis en place afin de limiter les risques liés aux autorisations.
+### Blacklist
 
+Le propriétaire peut bloquer des adresses spécifiques :
 
-## Blacklist
+- `setBlacklist(address, bool)`
+- `isBlacklisted(address)`
 
-Le propriétaire du contrat peut ajouter ou retirer certaines adresses de la liste noire.
-
-Une adresse blacklistée :
-
-- ne peut plus envoyer de tokens ;
-- ne peut plus recevoir de tokens.
-
-Fonctions disponibles :
-
-- `setBlacklist()`
-- `isBlacklisted()`
-
-
-# Sécurité
-
-Le contrat intègre plusieurs mécanismes de sécurité :
-
-### Protection contre la réentrance
-
-Les fonctions sensibles sont protégées grâce au module `ReentrancyGuard`.
-
-### Contrôle d'accès
-
-Le module `Ownable` permet de restreindre certaines opérations critiques au propriétaire du contrat.
-
-Ces opérations concernent notamment :
-
-- le verrouillage des tokens ;
-- la gestion de la blacklist ;
-- le transfert de propriété.
-
-### Protection contre l'adresse zéro
-
-Le contrat empêche :
-
-- les transferts vers l'adresse zéro ;
-- les approbations vers l'adresse zéro ;
-- certaines opérations invalides.
-
-### Protection des soldes verrouillés
-
-Les tokens faisant l'objet d'un lock-up ne peuvent pas être utilisés avant leur date de déverrouillage.
-
-### Vérification des montants
-
-Le contrat contrôle :
-
-- les montants positifs ;
-- les soldes disponibles ;
-- les autorisations suffisantes.
-
-### Protection contre les appels invalides
-
-Le contrat rejette :
-
-- les appels vers des fonctions inexistantes ;
-- les envois accidentels de BNB.
+Une adresse blacklistée ne peut plus envoyer ni recevoir de tokens.
 
 ---
 
-# Architecture du projet
+## Sécurité
 
-```text
-BCXToken
-│
-├── contracts
-│   └── BCXToken.sol
-│
-├── test
-│   └── BCXToken.test.js
-│
-├── scripts
-│   └── deploy.js
-│
+| Mécanisme                        | Détail                                                                 |
+|----------------------------------|------------------------------------------------------------------------|
+| Protection contre la réentrance  | `ReentrancyGuard` sur toutes les fonctions sensibles                  |
+| Contrôle d'accès                 | `Ownable` — lock, blacklist, transfert de propriété réservés au owner |
+| Protection adresse zéro          | Transferts et approbations vers 0x0 rejetés                           |
+| Protection soldes verrouillés    | Tokens en lock-up non utilisables avant expiration                    |
+| Vérification des montants        | Montants positifs, soldes disponibles, allowances suffisantes          |
+| Protection appels invalides      | Fonctions inexistantes et envois accidentels de BNB rejetés           |
+
+---
+
+## Architecture du projet
+
+```
+BCXToken/
+├── contracts/
+│   └── BCXToken.sol          ← Smart contract principal
+├── test/
+│   └── BCXToken.test.js      ← Tests Hardhat + Chai
+├── scripts/
+│   └── deploy.js             ← Script de déploiement
 ├── hardhat.config.js
-│
 ├── package.json
-│
 └── README.md
-
-
-# Installation
-
-Cloner le dépôt :
-
-git clone <repository-url>
-
-Accéder au projet :
-
-```bash
-cd BCXToken
-
-Installer les dépendances :
-
-```bash
-npm install
+```
 
 ---
 
-# Compilation
+## Installation
+
+```bash
+git clone <repository-url>
+cd BCXToken
+npm install
+```
+
+---
+
+## Configuration
+
+Créer un fichier `.env` à la racine :
+
+```env
+# Clé privée du wallet owner (ne jamais committer)
+PRIVATE_KEY=<votre_clé_privée>
+
+# RPC URL Sepolia (réseau de test actuel)
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+
+# RPC URL BSC Testnet (réseau cible futur)
+BSC_TESTNET_RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545
+```
+
+> ⚠️ Le fichier `.env` doit impérativement être dans le `.gitignore`. Ne jamais exposer la `PRIVATE_KEY` dans le code source ou sur GitHub.
+
+---
+
+## Compilation
 
 ```bash
 npx hardhat compile
+```
 
 ---
 
-# Exécution des tests
+## Tests
 
 ```bash
 npx hardhat test
+```
+
+Les tests couvrent :
+
+- Déploiement du contrat
+- Vérification du nom, symbole et décimales
+- Validation de la supply totale (100 000 000 BCX)
+- Transferts de tokens
+- Gestion des soldes insuffisants
+- Lock-up des Pionniers (365 jours)
+- Déverrouillage après expiration
+- Fonctionnalité de burn et réduction de supply
+- Gestion de la blacklist
+- Contrôle d'accès administrateur
 
 ---
 
-# Déploiement sur Binance Smart Chain Testnet
+## Déploiement
+
+### Sur Sepolia Testnet (réseau actuel)
+
+```bash
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+L'adresse du contrat déployé est vérifiable sur :
+https://sepolia.etherscan.io/address/0x309A26Fc44cF5DA36E5A5d3f43ACbC8ffDB73489
+
+### Sur BSC Testnet (réseau cible — migration prévue)
 
 ```bash
 npx hardhat run scripts/deploy.js --network bscTestnet
 ```
 
-Après le déploiement, l'adresse du contrat pourra être vérifiée sur BscScan.
+L'adresse du contrat sera vérifiable sur BscScan après déploiement.
 
 ---
 
-# Tests réalisés
+## Intégration Backend (Node.js + ethers.js)
 
-Les tests couvrent notamment :
+Le Smart Contract est intégré au backend BCX Finance via `tokenService.js`.
 
-- le déploiement du contrat ;
-- la vérification du nom, du symbole et des décimales ;
-- la validation de la supply totale ;
-- les transferts de tokens ;
-- les soldes insuffisants ;
-- le lock-up des Pionniers ;
-- le déverrouillage après expiration ;
-- la fonctionnalité de burn ;
-- la réduction de la supply totale ;
-- la gestion de la blacklist ;
-- le contrôle d'accès administrateur.
+### Connexion au contrat
+
+```javascript
+const { ethers } = require('ethers');
+
+const BCX_ABI = [
+  "function transfer(address to, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function totalSupply() view returns (uint256)",
+  "function lockTokens(address account, uint256 amount, uint256 duration)",
+  "function availableBalance(address account) view returns (uint256)",
+];
+
+const CONTRACT_ADDRESS = "0x309A26Fc44cF5DA36E5A5d3f43ACbC8ffDB73489";
+
+const getContrat = () => {
+  const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  return new ethers.Contract(CONTRACT_ADDRESS, BCX_ABI, wallet);
+};
+```
+
+### Transfert de tokens vers un investisseur
+
+```javascript
+const transfererTokens = async (wallet_address, tokens) => {
+  const contrat = getContrat();
+  const montant = ethers.parseUnits(tokens.toFixed(6), 18);
+  const tx = await contrat.transfer(wallet_address, montant);
+  await tx.wait(); // Attendre la confirmation blockchain
+  return tx.hash;  // Hash enregistré en base pour traçabilité
+};
+```
+
+### Lecture du solde BCX d'un wallet
+
+```javascript
+const lireSolde = async (wallet_address) => {
+  const contrat = getContrat();
+  const solde = await contrat.balanceOf(wallet_address);
+  return ethers.formatUnits(solde, 18);
+};
+```
+
+### Intégration Frontend (React + ethers.js + MetaMask)
+
+```javascript
+import { ethers } from 'ethers';
+
+// Connexion MetaMask
+const connecterMetaMask = async () => {
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const accounts = await provider.send('eth_requestAccounts', []);
+  return accounts[0];
+};
+
+// Lire le solde BCX depuis le frontend
+const lireSoldeFrontend = async (walletAddress) => {
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const contrat = new ethers.Contract(CONTRACT_ADDRESS, BCX_ABI, provider);
+  const solde = await contrat.balanceOf(walletAddress);
+  return ethers.formatUnits(solde, 18);
+};
+```
 
 ---
 
-# Technologies utilisées
+## Feuille de route technique
+
+| Étape | Statut | Détail |
+|-------|--------|--------|
+| Smart Contract BEP-20 |  Complété | Déployé sur Sepolia |
+| Intégration backend Node.js |  Complété | tokenService.js opérationnel |
+| Connexion MetaMask frontend |  Complété | ethers.js + BrowserProvider |
+| Tests unitaires Hardhat |  Complétés | Couverture complète |
+| Migration vers QuickNode |  En cours d'étude | Remplacer le RPC public |
+| Intégration Chainlink |  En cours d'étude | Oracle taux FCFA/USD |
+| Déploiement BSC Mainnet |  Prévu | Après validation complète |
+
+---
+
+## Technologies utilisées
 
 - Solidity 0.8.20
 - Hardhat
-- Ethers.js
+- Ethers.js v6
 - Chai
-- JavaScript
-- Binance Smart Chain
+- JavaScript / Node.js
+- Ethereum Sepolia Testnet
+- Binance Smart Chain (cible)
 
 ---
 
-# Auteur
+## Auteur
 
-**Etienne Ba**
-
-Projet réalisé dans le cadre de l'épreuve Blockchain de **FinTech Apprentice Africa**.
+**Abdou Etienne Ba**
+Product Manager & Développeur Full Stack — BCX Finance
+Projet réalisé dans le cadre de **Fintech Apprentice Africa — Promotion 1 — Juin 2026**
 
 ---
 
-# Licence
+## Licence
 
-Licence MIT.
+MIT
