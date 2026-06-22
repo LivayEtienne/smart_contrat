@@ -108,7 +108,7 @@ Rejet des appels vers des fonctions inexistantes et des envois accidentels de BN
 
 ```bash
 git clone <url-du-repo>
-cd bcx-finance
+cd contratsmart
 ```
 
 
