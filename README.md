@@ -29,7 +29,7 @@ Note réseau : Le déploiement initial a été réalisé sur Ethereum Sepolia Te
 
 
 ## Structure du projet
-contratsmart/
+smart_contrat/
 
 ├── contracts/
 
@@ -108,7 +108,7 @@ Rejet des appels vers des fonctions inexistantes et des envois accidentels de BN
 
 ```bash
 git clone <url-du-repo>
-cd contratsmart
+cd smart_contrat
 ```
 
 
