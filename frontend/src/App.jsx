@@ -8,11 +8,12 @@ import AyantsDroit from './pages/AyantDroit';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import TableBord from './pages/TableBord';
-// ── Pages PME (Léonie Gondo) ──
-import InscriptionPME from './pages/InscriptionPME';
-import DashboardPME from './pages/DashboardPME';
-import NouvelleTransaction from './pages/NouvelleTransaction';
-import ScoreBCX from './pages/ScoreBCX';
+// ── Pages PME (Léonie Gondo)
+import InscriptionPME from './pages/PME/InscriptionPME';
+import DashboardPME from './pages/PME/DashboardPME';
+import NouvelleTransaction from './pages/PME/NouvelleTransaction';
+import ScoreBCX from './pages/PME/ScoreBCX';
+import RapportMensuel from './pages/PME/RapportMensuel';
 
 export default function App() {
   return (
@@ -84,6 +85,12 @@ export default function App() {
         <Route path="/pme/score" element={
           <ProtectedRoute>
             <Layout><ScoreBCX /></Layout>
+          </ProtectedRoute>
+        } />
+        {/* Rapport mensuel */}
+        <Route path="/pme/rapport" element={
+          <ProtectedRoute>
+            <Layout><RapportMensuel /></Layout>
           </ProtectedRoute>
         } />
 
