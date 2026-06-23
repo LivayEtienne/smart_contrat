@@ -2,11 +2,21 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { sequelize } = require('./models');
 
 const app = express();
 
-app.use(cors());
+// ── SÉCURITÉ (HELMET) ──────────────────────────────────────────
+app.use(helmet());
+
+// ── CORS STRICT ────────────────────────────────────────────────
+const corsOptions = {
+  origin: process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',') : false,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // ── LOGGER MIDDLEWARE ──────────────────────────────────────────
