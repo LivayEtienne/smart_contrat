@@ -6,6 +6,7 @@ import AdminPanel from './pages/AdminPanel';
 import Profil from './pages/Profil';
 import AyantsDroit from './pages/AyantDroit';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoutePME from './components/ProtectedRoutePME';
 import Layout from './components/Layout';
 import TableBord from './pages/TableBord';
 // ── Pages PME (Léonie Gondo)
@@ -25,73 +26,58 @@ export default function App() {
         {/* Pages investisseur — avec sidebar */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
+            <Layout><Dashboard /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/depot/nouveau" element={
           <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <NewDepot />
-            </Layout>
+            <Layout><NewDepot /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/profil" element={
           <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <Profil />
-            </Layout>
+            <Layout><Profil /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/ayants-droit" element={
           <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <AyantsDroit />
-            </Layout>
+            <Layout><AyantsDroit /></Layout>
           </ProtectedRoute>
         } />
         <Route path="/tableau-bord" element={
-        <ProtectedRoute roleRequis="investisseur">
-          <Layout>
-            <TableBord />
-          </Layout>
-        </ProtectedRoute>
-      } />
+          <ProtectedRoute roleRequis="investisseur">
+            <Layout><TableBord /></Layout>
+          </ProtectedRoute>
+        } />
 
-        {/* Page admin — sans sidebar investisseur */}
+        {/* Page admin */}
         <Route path="/admin" element={
           <ProtectedRoute roleRequis="admin">
             <AdminPanel />
           </ProtectedRoute>
         } />
 
-        {/* ── Pages PME (Léonie Gondo) ── */}
-        {/* Page d'inscription publique */}
+        {/* ── Pages PME — ProtectedRoutePME (token pme_token) ── */}
         <Route path="/pme/inscription" element={<InscriptionPME />} />
-        {/* Dashboard PME */}
         <Route path="/pme/dashboard" element={
-          <ProtectedRoute>
-            <Layout><DashboardPME /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME>
+            <DashboardPME />
+          </ProtectedRoutePME>
         } />
-        {/* Nouvelle transaction */}
         <Route path="/pme/nouvelle-transaction" element={
-          <ProtectedRoute>
-            <Layout><NouvelleTransaction /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME>
+            <NouvelleTransaction />
+          </ProtectedRoutePME>
         } />
-        {/* Score BCX */}
         <Route path="/pme/score" element={
-          <ProtectedRoute>
-            <Layout><ScoreBCX /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME>
+            <ScoreBCX />
+          </ProtectedRoutePME>
         } />
-        {/* Rapport mensuel */}
         <Route path="/pme/rapport" element={
-          <ProtectedRoute>
-            <Layout><RapportMensuel /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME>
+            <RapportMensuel />
+          </ProtectedRoutePME>
         } />
 
         {/* Redirection par défaut */}
