@@ -39,6 +39,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/depots', require('./routes/depot'));
 app.use('/api/ayants-droit', require('./routes/ayantDroitRoute'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ── TEST ROUTE ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
