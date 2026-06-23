@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, LogOut } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, Wallet, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <LayoutDashboard size={18} />, label: 'Tableau de bord', path: '/tableau-bord' },
     { icon: <TrendingUp size={18} />, label: 'Mes investissements', path: '/dashboard' },
+    { icon: <Wallet size={18} />, label: 'Mes dépôts', path: '/depot/mes-depots' },
   ];
 
   const isActive = (path) => location.pathname === path;

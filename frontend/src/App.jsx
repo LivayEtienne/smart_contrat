@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NewDepot from './pages/NewDepot';
+import MesDepots from './pages/MesDepots';
 import AdminPanel from './pages/AdminPanel';
 import Profil from './pages/Profil';
 import AyantsDroit from './pages/AyantDroit';
@@ -28,6 +29,13 @@ export default function App() {
           <ProtectedRoute roleRequis="investisseur">
             <Layout>
               <NewDepot />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path="/depot/mes-depots" element={
+          <ProtectedRoute roleRequis="investisseur">
+            <Layout>
+              <MesDepots />
             </Layout>
           </ProtectedRoute>
         } />
