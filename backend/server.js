@@ -1,5 +1,6 @@
 'use strict';
 require('dotenv').config();
+require('express-async-errors');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -47,14 +48,12 @@ app.get('/', (req, res) => {
 // ── 404 HANDLER ───────────────────────────────────────────────
 app.use((req, res) => {
   console.log(`⚠️  Route introuvable : ${req.method} ${req.url}`);
-  res.status(404).json({ message: `Route ${req.url} introuvable` });
+  res.status(404).json({ success: false, message: `Route ${req.url} introuvable` });
 });
 
 // ── GLOBAL ERROR HANDLER ──────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('💥 Erreur serveur :', err.stack);
-  res.status(500).json({ message: 'Erreur interne du serveur', error: err.message });
-});
+const errorHandler = require('./middlewares/errorMiddleware');
+app.use(errorHandler);
 
 // ── DÉMARRAGE ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3003;

@@ -4,9 +4,15 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { Investisseur, Compte } = require('../models');
 
+const throwError = (msg, code = 400) => {
+  const err = new Error(msg);
+  err.statusCode = code;
+  throw err;
+};
+
 const inscrire = async ({ nom, prenom, email, mot_de_passe, telephone, wallet_address, role }) => {
   const existant = await Investisseur.findOne({ where: { email } });
-  if (existant) throw new Error('Email déjà utilisé');
+  if (existant) throwError('Email déjà utilisé');
 
   const mot_de_passe_hash = await bcrypt.hash(mot_de_passe, 10);
 
@@ -38,15 +44,15 @@ const inscrire = async ({ nom, prenom, email, mot_de_passe, telephone, wallet_ad
 
 const connecter = async ({ email, mot_de_passe }) => {
   const investisseur = await Investisseur.findOne({ where: { email } });
-  if (!investisseur) throw new Error('Email ou mot de passe incorrect');
+  if (!investisseur) throwError('Email ou mot de passe incorrect', 401);
 
   // Vérifier le statut du compte
   if (investisseur.statut === 'archive') {
-    throw new Error('Ce compte a été désactivé, contactez BCX Finance');
+    throwError('Ce compte a été désactivé, contactez BCX Finance', 403);
   }
 
   const valide = await bcrypt.compare(mot_de_passe, investisseur.mot_de_passe_hash);
-  if (!valide) throw new Error('Email ou mot de passe incorrect');
+  if (!valide) throwError('Email ou mot de passe incorrect', 401);
 
   const token = jwt.sign(
     {
