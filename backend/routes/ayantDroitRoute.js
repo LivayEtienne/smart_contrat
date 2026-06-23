@@ -1,6 +1,7 @@
 'use strict';
 const router = require('express').Router();
 const auth = require('../middlewares/authMiddleware');
+const { validateAjoutAyantDroit } = require('../middlewares/validationMiddleware');
 const {
   ajouter,
   mesList,
@@ -10,7 +11,7 @@ const {
 } = require('../controllers/ayantDroitController');
 
 // ── ROUTES INVESTISSEUR ────────────────────────────────────────
-router.post('/', auth('investisseur'), ajouter);
+router.post('/', auth('investisseur'), validateAjoutAyantDroit, ajouter);
 router.get('/', auth('investisseur'), mesList);
 
 // ── ROUTES ADMIN ───────────────────────────────────────────────

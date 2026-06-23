@@ -2,6 +2,7 @@
 const router = require('express').Router();
 const rateLimit = require('express-rate-limit');
 const { inscription, connexion } = require('../controllers/authController');
+const { validateInscription, validateConnexion } = require('../middlewares/validationMiddleware');
 
 const connexionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -11,7 +12,7 @@ const connexionLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post('/inscription', inscription);
-router.post('/connexion', connexionLimiter, connexion);
+router.post('/inscription', validateInscription, inscription);
+router.post('/connexion', connexionLimiter, validateConnexion, connexion);
 
 module.exports = router;
