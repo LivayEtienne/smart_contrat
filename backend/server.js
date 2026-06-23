@@ -31,6 +31,19 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     const emoji = res.statusCode < 400 ? '✅' : '❌';
     console.log(`${emoji} [${res.statusCode}] ${req.method} ${req.url} — ${duration}ms`);
+
+    // Logs de sécurité dédiés
+    if (res.statusCode === 429) {
+      console.warn(`🚨 [SECURITY] Déclenchement du Rate Limiter sur ${req.url} - IP: ${req.ip}`);
+    }
+    if (res.statusCode === 401) {
+      console.warn(`🚨 [SECURITY] Tentative d'accès non autorisé sur ${req.url} - IP: ${req.ip}`);
+    }
+    if (res.statusCode === 403 && req.url.includes('/admin')) {
+      console.warn(`🚨 [SECURITY] Accès refusé à une route admin sur ${req.url} - IP: ${req.ip}`);
+    } else if (res.statusCode === 403) {
+      console.warn(`🚨 [SECURITY] Accès interdit sur ${req.url} - IP: ${req.ip}`);
+    }
   });
   next();
 });

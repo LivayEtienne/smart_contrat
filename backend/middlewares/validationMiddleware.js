@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const verifierValidation = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.warn(`🚨 [SECURITY] Échec de validation des entrées sur ${req.url} - IP: ${req.ip}`);
     return res.status(400).json({
       success: false,
       message: 'Erreur de validation des données',
