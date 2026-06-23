@@ -1,21 +1,21 @@
 {
   "development": {
-    "username": "phpmyadmin",
-    "password": "Simplon2124@",
+    "username": "root",
+    "password": "",
     "database": "bcx_finance",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "test": {
-    "username": "phpmyadmin",
-    "password": "Simplon2124@",
+    "username": "root",
+    "password": "",
     "database": "bcx_finance_test",
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
-    "password": "Simplon2124@",
+    "password": "",
     "database": "bcx_finance_prod",
     "host": "127.0.0.1",
     "dialect": "mysql"
