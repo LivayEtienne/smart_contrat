@@ -1,49 +1,117 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ethers } from 'ethers';
 import { depotService } from '../services/api';
+import useOnlineStatus from '../hooks/useOnlineStatus';
+import {
+  getCachedCompte,
+  setCachedCompte,
+  getCachedWalletAddress,
+  setCachedWalletAddress
+} from '../services/cacheService';
+import {
+  isMetaMaskAvailable,
+  requestMetaMaskAccount,
+  getTokenBalance
+} from '../services/web3';
 
 export default function Profil() {
   const navigate = useNavigate();
+  const online = useOnlineStatus();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [compte, setCompte] = useState(null);
   const [loading, setLoading] = useState(true);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletMsg, setWalletMsg] = useState('');
+  const [balanceOnChain, setBalanceOnChain] = useState(null);
+  const [syncMessage, setSyncMessage] = useState('');
 
   useEffect(() => {
     const fetchCompte = async () => {
+      setLoading(true);
+      if (!online) {
+        const cached = getCachedCompte();
+        if (cached) {
+          setCompte(cached);
+          setSyncMessage('Mode hors ligne : affichage des données en cache.');
+        } else {
+          setSyncMessage('Mode hors ligne : aucune donnée en cache disponible.');
+        }
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await depotService.monCompte();
         setCompte(res.data);
+        setCachedCompte(res.data);
+        setSyncMessage('Connecté au backend. Données synchronisées.');
       } catch (err) {
         console.error(err);
+        const cached = getCachedCompte();
+        if (cached) {
+          setCompte(cached);
+          setSyncMessage('Erreur réseau. Affichage des données en cache.');
+        } else {
+          setSyncMessage('Impossible de charger les données. Vérifiez votre connexion.');
+        }
       } finally {
         setLoading(false);
       }
     };
     fetchCompte();
-  }, []);
+  }, [online]);
+
+  useEffect(() => {
+    const walletAddress = compte?.investisseur?.wallet_address || getCachedWalletAddress();
+    if (walletAddress) {
+      setCachedWalletAddress(walletAddress);
+      if (online) {
+        loadOnChainBalance(walletAddress);
+      } else {
+        setBalanceOnChain(null);
+      }
+    }
+  }, [compte, online]);
+
+  const loadOnChainBalance = async (walletAddress) => {
+    try {
+      const balance = await getTokenBalance(walletAddress);
+      setBalanceOnChain(balance);
+    } catch (err) {
+      console.warn('Impossible de lire le solde on-chain :', err.message);
+      setBalanceOnChain(null);
+    }
+  };
 
   const connecterMetaMask = async () => {
-    if (!window.ethereum) {
-      setWalletMsg('MetaMask non détecté — installez MetaMask');
+    if (!online) {
+      setWalletMsg('Hors ligne : impossible de connecter MetaMask.');
       return;
     }
+
+    if (!isMetaMaskAvailable()) {
+      setWalletMsg('MetaMask non détecté — installez MetaMask sur votre navigateur');
+      return;
+    }
+
     setWalletLoading(true);
     setWalletMsg('');
+
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const accounts = await provider.send('eth_requestAccounts', []);
-      const adresse = accounts[0];
+      const adresse = await requestMetaMaskAccount();
       await depotService.mettreAJourWallet({ wallet_address: adresse });
-      setCompte(prev => ({
-        ...prev,
-        investisseur: { ...prev.investisseur, wallet_address: adresse }
-      }));
+      const updatedCompte = {
+        ...compte,
+        investisseur: { ...compte.investisseur, wallet_address: adresse }
+      };
+      setCompte(updatedCompte);
+      setCachedCompte(updatedCompte);
+      setCachedWalletAddress(adresse);
       setWalletMsg('✅ Wallet connecté et sauvegardé avec succès');
+      await loadOnChainBalance(adresse);
     } catch (err) {
-      setWalletMsg('❌ Connexion MetaMask échouée');
+      const message = err.message || 'Connexion MetaMask échouée';
+      setWalletMsg(`❌ ${message}`);
     } finally {
       setWalletLoading(false);
     }
@@ -68,6 +136,9 @@ export default function Profil() {
       </nav>
 
       <div style={styles.content}>
+        <div style={styles.syncInfo}>
+          <span style={styles.syncInfoText}>{syncMessage}</span>
+        </div>
         <h1 style={styles.title}>Mon Profil</h1>
 
         {/* INFOS PERSONNELLES */}
@@ -126,6 +197,21 @@ export default function Profil() {
               </span>
             </div>
           </div>
+          {compte?.investisseur?.wallet_address && (
+            <div style={styles.onChainBalanceBox}>
+              <span style={styles.infoLabel}>Solde BCX on-chain</span>
+              <span style={styles.onChainBalanceValue}>
+                {balanceOnChain !== null ? `${balanceOnChain.toLocaleString()} BCX` : '— en attente de lecture'}
+              </span>
+              <button
+                style={styles.refreshButton}
+                onClick={() => loadOnChainBalance(compte.investisseur.wallet_address)}
+                disabled={!online}
+              >
+                Actualiser le solde on-chain
+              </button>
+            </div>
+          )}
         </div>
 
         {/* WALLET */}
@@ -233,5 +319,21 @@ const styles = {
     background: 'rgba(212,175,55,0.1)', border: '1px solid #D4AF37',
     borderRadius: '6px', padding: '6px 14px', color: '#D4AF37',
     fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+  },
+  syncInfo: {
+    marginBottom: '16px', padding: '14px 16px', borderRadius: '12px',
+    background: '#111', border: '1px solid #1a1a1a', color: '#888',
+  },
+  syncInfoText: { fontSize: '13px' },
+  onChainBalanceBox: {
+    marginTop: '18px', padding: '16px', borderRadius: '12px',
+    background: '#0C0C0F', border: '1px solid #1a1a1a',
+    display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
+  },
+  onChainBalanceValue: { color: '#D4AF37', fontSize: '18px', fontWeight: '700' },
+  refreshButton: {
+    border: '1px solid #D4AF37', borderRadius: '10px', background: 'transparent',
+    color: '#D4AF37', padding: '10px 16px', cursor: 'pointer',
+    fontSize: '13px', fontWeight: 600,
   },
 };

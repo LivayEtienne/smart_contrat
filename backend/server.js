@@ -1,5 +1,24 @@
 'use strict';
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+const envPath = path.resolve(__dirname, '.env');
+const rootEnvPath = path.resolve(__dirname, '..', '.env');
+
+let envLoaded = null;
+const envResult = dotenv.config({ path: envPath });
+if (envResult.error) {
+  const rootResult = dotenv.config({ path: rootEnvPath });
+  if (!rootResult.error) {
+    envLoaded = rootEnvPath;
+  }
+} else {
+  envLoaded = envPath;
+}
+
+console.log('Loaded env file:', envLoaded || 'none');
+console.log('JWT_SECRET present:', Boolean(process.env.JWT_SECRET));
+
 const express = require('express');
 const cors = require('cors');
 const { sequelize } = require('./models');
@@ -80,3 +99,5 @@ sequelize.authenticate()
     console.error('❌ Erreur de connexion à la base de données :', err.message);
     process.exit(1);
   });
+
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
