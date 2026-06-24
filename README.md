@@ -137,9 +137,17 @@ La PRIVATE_KEY et le JWT_SECRET sont fournis directement par le Product Manager 
 ```bash
 cd backend
 npm install
-npx sequelize-cli db:migrate
-npx sequelize-cli db:seed:all
-node server.js
+```
+
+> ⚠️ **Étape critique — Ne pas sauter !**
+> Sans ces deux commandes, la base de données sera vide et aucun compte ne fonctionnera.
+> ```bash
+> npx sequelize-cli db:migrate
+> npx sequelize-cli db:seed:all
+> ```
+
+```bash
+npm run dev
 ```
 
 Le serveur démarre sur http://localhost:3003
