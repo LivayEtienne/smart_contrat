@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ayantsDroitService } from '../services/api';
 
 export default function AyantsDroit() {
   const navigate = useNavigate();
@@ -11,18 +12,16 @@ export default function AyantsDroit() {
   });
   const [msg, setMsg] = useState('');
 
-  // Données mockées — à remplacer par appel API
   useEffect(() => {
-    setAyants([
-      {
-        id: '1',
-        nom: 'Diallo',
-        prenom: 'Fatoumata',
-        email: 'fatoumata@email.com',
-        lien_parente: 'Épouse',
-        statut: 'en_attente'
+    const fetchAyants = async () => {
+      try {
+        const res = await ayantsDroitService.liste();
+        setAyants(res.data);
+      } catch (err) {
+        console.error('Erreur chargement ayants droit :', err);
       }
-    ]);
+    };
+    fetchAyants();
   }, []);
 
   const handleSubmit = async () => {
@@ -32,9 +31,8 @@ export default function AyantsDroit() {
     }
     setLoading(true);
     try {
-      // TODO : appel API quand le backend sera prêt
-      // await ayantsDroitService.ajouter(form);
-      setAyants(prev => [...prev, { ...form, id: Date.now().toString(), statut: 'en_attente' }]);
+      const res = await ayantsDroitService.ajouter(form);
+      setAyants(prev => [...prev, res.data]);
       setForm({ nom: '', prenom: '', email: '', lien_parente: '' });
       setShowForm(false);
       setMsg('✅ Ayant droit ajouté, en attente de validation');

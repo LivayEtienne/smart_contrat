@@ -39,4 +39,9 @@ export const depotService = {
   mettreAJourWallet: (data) => api.put('/depots/wallet', data),
 };
 
+export const ayantsDroitService = {
+  liste: () => api.get('/ayants-droit'),
+  ajouter: (data) => api.post('/ayants-droit', data),
+};
+
 export default api;
