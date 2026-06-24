@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { depotService } from '../services/api';
+import { depotService, adminService } from '../services/api';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -11,6 +11,10 @@ export default function AdminPanel() {
   const [actionId, setActionId] = useState(null);
   const [motifRefus, setMotifRefus] = useState('');
   const [showMotif, setShowMotif] = useState(null);
+
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
 
   // États pour gérer l'animation de survol via JS pour les cartes (alternative propre aux pseudo-classes CSS)
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -28,6 +32,22 @@ export default function AdminPanel() {
   };
 
   useEffect(() => { fetchDepots(); }, [filtre]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const res = await adminService.getStats();
+        setStats(res.data);
+      } catch (err) {
+        console.error(err);
+        setStatsError('Erreur de chargement des statistiques');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleValider = async (id) => {
     setActionId(id);
@@ -81,6 +101,34 @@ export default function AdminPanel() {
           <h1 style={styles.title}>Gestion des dépôts</h1>
           <span style={styles.badgeCount}>{depots.length} {depots.length > 1 ? 'flux' : 'flux'}</span>
         </div>
+
+        {/* STATISTIQUES */}
+        {statsLoading ? (
+          <div style={styles.statsCard}>
+            <p style={{ color: '#D4AF37', margin: 0 }}>Chargement des statistiques...</p>
+          </div>
+        ) : statsError ? (
+          <div style={styles.statsCard}>
+            <p style={{ color: '#FF4444', margin: 0 }}>{statsError}</p>
+          </div>
+        ) : stats && (
+          <div style={styles.statsGrid}>
+            <div style={styles.statBox}>
+              <span style={styles.infoLabel}>Total Investisseurs</span>
+              <span style={styles.statValue}>{stats.total_investisseurs}</span>
+            </div>
+            <div style={styles.statBox}>
+              <span style={styles.infoLabel}>Total Dépôts</span>
+              <span style={styles.statValue}>{stats.total_depots}</span>
+            </div>
+            <div style={{ ...styles.statBox, borderColor: '#D4AF37', background: 'rgba(212,175,55,0.02)' }}>
+              <span style={styles.infoLabel}>Tokens BCX Distribués</span>
+              <span style={{ ...styles.statValue, color: '#D4AF37' }}>
+                {stats.total_bcx_distribues?.toLocaleString() || 0}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* FILTRES ANIMÉS */}
         <div style={styles.filtres}>
@@ -272,6 +320,10 @@ const styles = {
     background: '#121217', color: '#8E8E93', fontSize: '11px', fontWeight: '600',
     padding: '4px 10px', borderRadius: '20px', border: '1px solid #22222A' 
   },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' },
+  statBox: { background: '#101014', border: '1px solid #1A1A22', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  statValue: { color: '#fff', fontSize: '24px', fontWeight: '800' },
+  statsCard: { background: '#101014', border: '1px solid #1A1A22', borderRadius: '12px', padding: '20px', marginBottom: '28px', textAlign: 'center' },
   filtres: { display: 'flex', gap: '10px', marginBottom: '32px' },
   filtre: {
     background: '#101014', border: '1px solid #1F1F27', color: '#8E8E93',
