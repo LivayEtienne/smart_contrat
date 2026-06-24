@@ -1,12 +1,43 @@
 'use strict';
+const path = require('path');
+const dotenv = require('dotenv');
+
+const envPath = path.resolve(__dirname, '.env');
+const rootEnvPath = path.resolve(__dirname, '..', '.env');
+
+let envLoaded = null;
+const envResult = dotenv.config({ path: envPath });
+if (envResult.error) {
+  const rootResult = dotenv.config({ path: rootEnvPath });
+  if (!rootResult.error) {
+    envLoaded = rootEnvPath;
+  }
+} else {
+  envLoaded = envPath;
+}
+
+console.log('Loaded env file:', envLoaded || 'none');
+console.log('JWT_SECRET present:', Boolean(process.env.JWT_SECRET));
+
 require('dotenv').config();
+require('express-async-errors');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { sequelize } = require('./models');
 
 const app = express();
 
-app.use(cors());
+// ── SÉCURITÉ (HELMET) ──────────────────────────────────────────
+app.use(helmet());
+
+// ── CORS STRICT ────────────────────────────────────────────────
+const corsOptions = {
+  origin: process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',') : false,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 // ── LOGGER MIDDLEWARE ──────────────────────────────────────────
@@ -20,6 +51,19 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     const emoji = res.statusCode < 400 ? '✅' : '❌';
     console.log(`${emoji} [${res.statusCode}] ${req.method} ${req.url} — ${duration}ms`);
+
+    // Logs de sécurité dédiés
+    if (res.statusCode === 429) {
+      console.warn(`🚨 [SECURITY] Déclenchement du Rate Limiter sur ${req.url} - IP: ${req.ip}`);
+    }
+    if (res.statusCode === 401) {
+      console.warn(`🚨 [SECURITY] Tentative d'accès non autorisé sur ${req.url} - IP: ${req.ip}`);
+    }
+    if (res.statusCode === 403 && req.url.includes('/admin')) {
+      console.warn(`🚨 [SECURITY] Accès refusé à une route admin sur ${req.url} - IP: ${req.ip}`);
+    } else if (res.statusCode === 403) {
+      console.warn(`🚨 [SECURITY] Accès interdit sur ${req.url} - IP: ${req.ip}`);
+    }
   });
   next();
 });
@@ -28,6 +72,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/depots', require('./routes/depot'));
 app.use('/api/ayants-droit', require('./routes/ayantDroitRoute'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ── TEST ROUTE ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -37,14 +82,12 @@ app.get('/', (req, res) => {
 // ── 404 HANDLER ───────────────────────────────────────────────
 app.use((req, res) => {
   console.log(`⚠️  Route introuvable : ${req.method} ${req.url}`);
-  res.status(404).json({ message: `Route ${req.url} introuvable` });
+  res.status(404).json({ success: false, message: `Route ${req.url} introuvable` });
 });
 
 // ── GLOBAL ERROR HANDLER ──────────────────────────────────────
-app.use((err, req, res, next) => {
-  console.error('💥 Erreur serveur :', err.stack);
-  res.status(500).json({ message: 'Erreur interne du serveur', error: err.message });
-});
+const errorHandler = require('./middlewares/errorMiddleware');
+app.use(errorHandler);
 
 // ── DÉMARRAGE ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3003;
@@ -80,3 +123,5 @@ sequelize.authenticate()
     console.error('❌ Erreur de connexion à la base de données :', err.message);
     process.exit(1);
   });
+
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
