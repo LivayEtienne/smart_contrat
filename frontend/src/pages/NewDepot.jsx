@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { depotService } from '../services/api';
+import useOnlineStatus from '../hooks/useOnlineStatus';
+import { getCachedWalletAddress, setCachedWalletAddress } from '../services/cacheService';
+import { sendCryptoDeposit } from '../services/web3';
 
 export default function NewDepot() {
   const navigate = useNavigate();
+  const online = useOnlineStatus();
   const [form, setForm] = useState({
     montant: '',
     devise_origine: 'FCFA',
@@ -17,16 +21,28 @@ export default function NewDepot() {
   const [walletConnecte, setWalletConnecte] = useState(null);
   const [walletLoading, setWalletLoading] = useState(false);
 
+  useEffect(() => {
+    const cachedAddress = getCachedWalletAddress();
+    if (cachedAddress) {
+      setWalletConnecte(cachedAddress);
+    }
+  }, []);
+
   const montantUSD = form.devise_origine === 'FCFA'
     ? (parseFloat(form.montant) / 600).toFixed(2)
     : parseFloat(form.montant).toFixed(2);
 
-  // ── CONNEXION METAMASK ─────────────────────────────────────────
   const connecterMetaMask = async () => {
+    if (!online) {
+      setError('Hors ligne : impossible de connecter MetaMask.');
+      return;
+    }
+
     if (!window.ethereum) {
       setError('MetaMask non détecté — installez MetaMask sur votre navigateur');
       return;
     }
+
     setWalletLoading(true);
     setError('');
     try {
@@ -34,16 +50,14 @@ export default function NewDepot() {
       const accounts = await provider.send('eth_requestAccounts', []);
       const adresse = accounts[0];
       setWalletConnecte(adresse);
+      setCachedWalletAddress(adresse);
 
-      // Sauvegarder l'adresse dans le backend
       try {
         await depotService.mettreAJourWallet({ wallet_address: adresse });
         console.log('🦊 Wallet sauvegardé en base :', adresse);
       } catch (saveErr) {
-        // Ne pas bloquer l'affichage si la sauvegarde échoue
         console.warn('⚠️ Wallet connecté localement mais non sauvegardé en base :', saveErr.message);
       }
-
     } catch (err) {
       if (err.code === 4001) {
         setError('Connexion MetaMask annulée par l\'utilisateur');
@@ -55,12 +69,15 @@ export default function NewDepot() {
     }
   };
 
-  // ── SOUMISSION DU DÉPÔT ───────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validation minimum 500 USD
+    if (!online) {
+      setError('Hors ligne : impossible de soumettre un dépôt.');
+      return;
+    }
+
     const montantUSDNum = form.devise_origine === 'FCFA'
       ? parseFloat(form.montant) / 600
       : parseFloat(form.montant);
@@ -70,24 +87,34 @@ export default function NewDepot() {
       return;
     }
 
-    // Voie B — wallet obligatoire
     if (form.voie === 'B' && !walletConnecte) {
       setError('Veuillez connecter votre MetaMask avant de soumettre');
       return;
     }
 
     setLoading(true);
+    let autoTxHash = undefined;
+
     try {
+      if (form.voie === 'B') {
+        // Exécution de la transaction via ethers.js et récupération du tx_hash
+        autoTxHash = await sendCryptoDeposit(montantUSDNum);
+      }
+
       await depotService.creer({
         montant: parseFloat(form.montant),
         devise_origine: form.devise_origine,
         moyen_paiement: form.moyen_paiement,
         voie: form.voie,
-        tx_hash: form.voie === 'B' ? form.tx_hash : undefined,
+        tx_hash: autoTxHash,
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors du dépôt');
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setError('Transaction MetaMask annulée par l\'utilisateur');
+      } else {
+        setError(err.response?.data?.message || err.message || 'Erreur lors du dépôt');
+      }
     } finally {
       setLoading(false);
     }
@@ -100,9 +127,14 @@ export default function NewDepot() {
         <h1 style={styles.title}>Nouveau dépôt</h1>
         <p style={styles.sub}>Minimum 500 USD pour rejoindre le Cercle</p>
 
+        {!online && (
+          <div style={styles.offlineNotice}>
+            Vous êtes hors ligne. Seules les données mises en cache sont accessibles et les actions d’écriture sont désactivées.
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} style={styles.form}>
 
-          {/* VOIE */}
           <div style={styles.voieGrid}>
             {['A', 'B'].map((v) => (
               <div
@@ -122,7 +154,6 @@ export default function NewDepot() {
             ))}
           </div>
 
-          {/* CONNEXION METAMASK — Voie B uniquement */}
           {form.voie === 'B' && (
             <div style={styles.walletBox}>
               {walletConnecte ? (
@@ -138,7 +169,7 @@ export default function NewDepot() {
                   type="button"
                   style={walletLoading ? styles.btnMetaMaskLoading : styles.btnMetaMask}
                   onClick={connecterMetaMask}
-                  disabled={walletLoading}
+                  disabled={walletLoading || !online}
                 >
                   {walletLoading ? 'Connexion...' : '🦊 Connecter MetaMask'}
                 </button>
@@ -146,7 +177,6 @@ export default function NewDepot() {
             </div>
           )}
 
-          {/* MONTANT */}
           <div style={styles.field}>
             <label style={styles.label}>Montant</label>
             <input
@@ -167,7 +197,6 @@ export default function NewDepot() {
             )}
           </div>
 
-          {/* DEVISE */}
           <div style={styles.field}>
             <label style={styles.label}>Devise</label>
             <select
@@ -186,7 +215,6 @@ export default function NewDepot() {
             </select>
           </div>
 
-          {/* MOYEN DE PAIEMENT */}
           <div style={styles.field}>
             <label style={styles.label}>Moyen de paiement</label>
             <input
@@ -198,19 +226,10 @@ export default function NewDepot() {
             />
           </div>
 
-          {/* TX HASH — Voie B uniquement, saisi manuellement si pas auto */}
           {form.voie === 'B' && walletConnecte && (
             <div style={styles.field}>
-              <label style={styles.label}>Hash de transaction (optionnel)</label>
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="0x... (laissez vide si non disponible)"
-                value={form.tx_hash}
-                onChange={(e) => setForm({ ...form, tx_hash: e.target.value })}
-              />
-              <span style={styles.txHint}>
-                Disponible sur sepolia.etherscan.io après votre envoi crypto
+              <span style={{...styles.txHint, color: '#D4AF37'}}>
+                Une transaction MetaMask sera déclenchée automatiquement lors de la soumission. Le hash sera récupéré et lié à votre dépôt.
               </span>
             </div>
           )}
@@ -218,9 +237,9 @@ export default function NewDepot() {
           {error && <p style={styles.error}>{error}</p>}
 
           <button
-            style={loading ? styles.btnDisabled : styles.btn}
+            style={online ? (loading ? styles.btnDisabled : styles.btn) : styles.btnDisabled}
             type="submit"
-            disabled={loading}
+            disabled={loading || !online}
           >
             {loading ? 'Envoi en cours...' : 'Soumettre le dépôt'}
           </button>
@@ -231,6 +250,77 @@ export default function NewDepot() {
   );
 }
 
+const styles = {
+  page: {
+    minHeight: '100vh', background: '#0A0A0A',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: "'Inter', sans-serif", padding: '24px',
+  },
+  card: {
+    background: '#111', border: '1px solid #2a2a2a', borderRadius: '16px',
+    padding: '40px', width: '100%', maxWidth: '480px',
+  },
+  back: {
+    background: 'transparent', border: 'none', color: '#555',
+    cursor: 'pointer', fontSize: '13px', padding: '0', marginBottom: '24px',
+  },
+  title: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: '0 0 4px' },
+  sub: { color: '#555', fontSize: '13px', marginBottom: '28px' },
+  offlineNotice: {
+    marginBottom: '20px', padding: '12px 16px', borderRadius: '12px',
+    border: '1px solid #552222', background: '#180a0a', color: '#f1b3b3',
+  },
+  form: { display: 'flex', flexDirection: 'column', gap: '20px' },
+  voieGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+  voie: {
+    background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '10px',
+    padding: '14px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px',
+  },
+  voieActive: {
+    background: 'rgba(212,175,55,0.08)', border: '1px solid #D4AF37', borderRadius: '10px',
+    padding: '14px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px',
+  },
+  voieLabel: { color: '#D4AF37', fontSize: '14px', fontWeight: '700' },
+  voieDesc: { color: '#888', fontSize: '12px' },
+  walletBox: { marginTop: '16px', marginBottom: '8px' },
+  walletConnecte: {
+    display: 'flex', alignItems: 'center', gap: '12px',
+    background: '#0D0D0D', border: '1px solid #1a1a1a', borderRadius: '12px', padding: '14px'
+  },
+  walletDot: { color: '#22c55e', fontSize: '10px' },
+  walletAdresse: { color: '#fff', fontSize: '13px', fontWeight: '600' },
+  walletOk: { color: '#22c55e', fontSize: '12px', marginLeft: 'auto' },
+  field: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  label: { color: '#AAA', fontSize: '13px', fontWeight: 600 },
+  input: {
+    background: '#0B0B0E', border: '1px solid #1f1f1f', borderRadius: '10px',
+    color: '#fff', padding: '12px 14px', fontSize: '14px', outline: 'none'
+  },
+  txHint: { color: '#666', fontSize: '12px', marginTop: '4px' },
+  convert: { color: '#999', fontSize: '12px' },
+  convertDanger: { color: '#FF6666', fontSize: '12px' },
+  error: { color: '#FF6767', fontSize: '13px', margin: 0 },
+  btn: {
+    background: 'linear-gradient(135deg, #D4AF37, #F5E17A)', border: 'none',
+    borderRadius: '12px', color: '#060608', padding: '14px',
+    fontWeight: '700', cursor: 'pointer', fontSize: '14px'
+  },
+  btnDisabled: {
+    background: '#2a2a2a', border: '1px solid #1f1f1f', color: '#777',
+    borderRadius: '12px', padding: '14px', fontSize: '14px', cursor: 'not-allowed'
+  },
+  btnMetaMask: {
+    background: 'rgba(212,175,55,0.1)', border: '1px solid #D4AF37',
+    borderRadius: '10px', color: '#D4AF37', padding: '12px 18px', fontSize: '14px',
+    cursor: 'pointer', width: '100%'
+  },
+  btnMetaMaskLoading: {
+    background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '10px',
+    color: '#777', padding: '12px 18px', fontSize: '14px', cursor: 'not-allowed', width: '100%'
+  }
+};
+
+/*
 const styles = {
   page: {
     minHeight: '100vh', background: '#0A0A0A',
@@ -302,3 +392,4 @@ const styles = {
     padding: '14px', fontSize: '15px', fontWeight: '700', cursor: 'not-allowed',
   },
 };
+*/

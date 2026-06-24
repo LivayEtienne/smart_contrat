@@ -1,4 +1,28 @@
-# React + Vite
+# Frontend - Smart Contrat
+
+## ⚠️ Configuration requise avant le lancement
+
+Avant de lancer l'application frontend, vous devez obligatoirement configurer vos variables d'environnement :
+
+1. À la racine du dossier `frontend`, dupliquez le fichier `.env.example` et renommez la copie en `.env`.
+   - **Sous Linux/Mac** : `cp .env.example .env`
+   - **Sous Windows** : `copy .env.example .env`
+2. Vérifiez que le fichier `.env` contient bien la variable `VITE_BCX_CONTRACT_ADDRESS` avec l'adresse du contrat déployé.
+
+## 🚀 Lancement de l'application
+
+1. Installez les dépendances :
+   ```bash
+   npm install
+   ```
+2. Démarrez le serveur de développement :
+   ```bash
+   npm run dev
+   ```
+
+---
+
+# React + Vite (Documentation originale Vite)
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
