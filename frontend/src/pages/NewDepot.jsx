@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { depotService } from '../services/api';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import { getCachedWalletAddress, setCachedWalletAddress } from '../services/cacheService';
+import { sendCryptoDeposit } from '../services/web3';
 
 export default function NewDepot() {
   const navigate = useNavigate();
@@ -92,17 +93,28 @@ export default function NewDepot() {
     }
 
     setLoading(true);
+    let autoTxHash = undefined;
+
     try {
+      if (form.voie === 'B') {
+        // Exécution de la transaction via ethers.js et récupération du tx_hash
+        autoTxHash = await sendCryptoDeposit(montantUSDNum);
+      }
+
       await depotService.creer({
         montant: parseFloat(form.montant),
         devise_origine: form.devise_origine,
         moyen_paiement: form.moyen_paiement,
         voie: form.voie,
-        tx_hash: form.voie === 'B' ? form.tx_hash : undefined,
+        tx_hash: autoTxHash,
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Erreur lors du dépôt');
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setError('Transaction MetaMask annulée par l\'utilisateur');
+      } else {
+        setError(err.response?.data?.message || err.message || 'Erreur lors du dépôt');
+      }
     } finally {
       setLoading(false);
     }
@@ -216,16 +228,8 @@ export default function NewDepot() {
 
           {form.voie === 'B' && walletConnecte && (
             <div style={styles.field}>
-              <label style={styles.label}>Hash de transaction (optionnel)</label>
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="0x... (laissez vide si non disponible)"
-                value={form.tx_hash}
-                onChange={(e) => setForm({ ...form, tx_hash: e.target.value })}
-              />
-              <span style={styles.txHint}>
-                Disponible sur sepolia.etherscan.io après votre envoi crypto
+              <span style={{...styles.txHint, color: '#D4AF37'}}>
+                Une transaction MetaMask sera déclenchée automatiquement lors de la soumission. Le hash sera récupéré et lié à votre dépôt.
               </span>
             </div>
           )}

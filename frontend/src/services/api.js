@@ -44,4 +44,8 @@ export const ayantsDroitService = {
   ajouter: (data) => api.post('/ayants-droit', data),
 };
 
+export const adminService = {
+  getStats: () => api.get('/admin/stats'),
+};
+
 export default api;

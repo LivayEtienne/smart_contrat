@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-const BCX_CONTRACT_ADDRESS = '0x309A26Fc44cF5DA36E5A5d3f43ACbC8ffDB73489';
+const BCX_CONTRACT_ADDRESS = import.meta.env.VITE_BCX_CONTRACT_ADDRESS;
 const BCX_ABI = [
   'function balanceOf(address account) view returns (uint256)'
 ];
@@ -39,4 +39,26 @@ export const getTokenBalance = async (walletAddress) => {
   const contract = new ethers.Contract(BCX_CONTRACT_ADDRESS, BCX_ABI, provider);
   const rawBalance = await contract.balanceOf(walletAddress);
   return parseFloat(ethers.formatUnits(rawBalance, 18));
+};
+
+export const sendCryptoDeposit = async (amountUSD) => {
+  const provider = getBrowserProvider();
+  const network = await provider.getNetwork();
+  if (network.chainId !== SEPOLIA_CHAIN_ID) {
+    throw new Error('Veuillez passer MetaMask sur le réseau Sepolia');
+  }
+  
+  const signer = await provider.getSigner();
+  
+  // Taux de change fictif pour le concours/démo (ex: 1 ETH = 3000 USD)
+  const ETH_PRICE = 3000;
+  const ethAmount = (parseFloat(amountUSD) / ETH_PRICE).toFixed(18);
+  
+  const tx = await signer.sendTransaction({
+    to: BCX_CONTRACT_ADDRESS,
+    value: ethers.parseEther(ethAmount)
+  });
+
+  const receipt = await tx.wait(); // attente confirmation blockchain
+  return receipt.hash;
 };
