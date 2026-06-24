@@ -1,5 +1,21 @@
 require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+const rootEnvPath = path.resolve(__dirname, '.env');
+const backendEnvPath = path.resolve(__dirname, 'backend', '.env');
+
+const rootEnv = dotenv.config({ path: rootEnvPath });
+if (rootEnv.error) {
+  const backendEnv = dotenv.config({ path: backendEnvPath });
+  if (backendEnv.error) {
+    console.warn('No .env file found in project root or backend folder.');
+  } else {
+    console.log(`Loaded env from ${backendEnvPath}`);
+  }
+} else {
+  console.log(`Loaded env from ${rootEnvPath}`);
+}
 
 module.exports = {
   solidity: "0.8.20",
