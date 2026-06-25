@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { depotService, adminService } from '../services/api';
 
 export default function AdminPanel() {
@@ -85,7 +85,15 @@ export default function AdminPanel() {
     <div style={styles.page}>
       {/* BARRE DE NAVIGATION */}
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>ADMIN</span></span>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img
+            src="/logo-optimized.png"
+            alt="BCX Finance Admin"
+            style={{ height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </Link>
         <div style={styles.navRight}>
           <div style={{ textAlign: 'right' }}>
             <p style={styles.navUser}>{user.prenom} {user.nom}</p>
@@ -162,10 +170,10 @@ export default function AdminPanel() {
           <div style={styles.list}>
             {depots.map((d, index) => {
               const isHovered = hoveredCard === d.id;
-              
+
               return (
-                <div 
-                  key={d.id} 
+                <div
+                  key={d.id}
                   style={{
                     ...styles.depotCard,
                     ...(isHovered ? styles.depotCardHover : {}),
@@ -182,9 +190,9 @@ export default function AdminPanel() {
                       </p>
                       <p style={styles.investEmail}>{d.Investisseur?.email}</p>
                     </div>
-                    <span style={{ 
-                      ...styles.statut, 
-                      color: statutColor[d.statut], 
+                    <span style={{
+                      ...styles.statut,
+                      color: statutColor[d.statut],
                       background: statutBg[d.statut],
                       border: `1px solid rgba(${d.statut === 'valide' ? '76,175,80' : d.statut === 'refuse' ? '255,68,68' : '245,166,35'}, 0.15)`
                     }}>
@@ -293,10 +301,10 @@ export default function AdminPanel() {
 
 // STYLES AVEC TRANSITIONS ET LOGIQUE PREMIUM FINANCIÈRE
 const styles = {
-  page: { 
-    minHeight: '100vh', 
-    background: '#060608', 
-    fontFamily: "'Inter', system-ui, -apple-system, sans-serif", 
+  page: {
+    minHeight: '100vh',
+    background: '#060608',
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     color: '#fff',
     WebkitFontSmoothing: 'antialiased'
   },
@@ -316,9 +324,9 @@ const styles = {
   content: { maxWidth: '900px', margin: '0 auto', padding: '40px 24px' },
   headerRow: { display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '28px' },
   title: { color: '#fff', fontSize: '24px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' },
-  badgeCount: { 
+  badgeCount: {
     background: '#121217', color: '#8E8E93', fontSize: '11px', fontWeight: '600',
-    padding: '4px 10px', borderRadius: '20px', border: '1px solid #22222A' 
+    padding: '4px 10px', borderRadius: '20px', border: '1px solid #22222A'
   },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' },
   statBox: { background: '#101014', border: '1px solid #1A1A22', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' },
@@ -356,9 +364,9 @@ const styles = {
   investName: { color: '#fff', fontSize: '16px', fontWeight: '600', margin: 0 },
   investEmail: { color: '#636366', fontSize: '13px', margin: '3px 0 0' },
   statut: { fontSize: '11px', fontWeight: '700', padding: '5px 12px', borderRadius: '30px', letterSpacing: '0.3px' },
-  depotInfo: { 
-    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px', 
-    background: '#101014', padding: '16px', borderRadius: '12px', border: '1px solid #181820' 
+  depotInfo: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px',
+    background: '#101014', padding: '16px', borderRadius: '12px', border: '1px solid #181820'
   },
   infoItem: { display: 'flex', flexDirection: 'column', gap: '4px' },
   infoLabel: { color: '#636366', fontSize: '11px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase' },
@@ -374,9 +382,9 @@ const styles = {
     padding: '10px 24px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
     transition: 'all 0.2s ease',
   },
-  motifBox: { 
-    marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', 
-    background: 'rgba(255,68,68,0.02)', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.15)' 
+  motifBox: {
+    marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px',
+    background: 'rgba(255,68,68,0.02)', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.15)'
   },
   motifInput: {
     background: '#060608', border: '1px solid #22222A', borderRadius: '8px',

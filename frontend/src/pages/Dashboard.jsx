@@ -194,7 +194,7 @@ const styles = {
   },
   navLogo: { fontSize: '18px', fontWeight: '800', color: '#fff', letterSpacing: '2px' },
   navRight: { display: 'flex', alignItems: 'center', gap: '12px' },
-  navUser: { color: '#888', fontSize: '14px' },
+  navUser: { color: '#E5E5EA', fontSize: '14px', fontWeight: '500' },
   profilBtn: {
     background: 'transparent', border: '1px solid #D4AF37', color: '#D4AF37',
     padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',

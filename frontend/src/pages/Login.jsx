@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/api';
 
 export default function Login() {
@@ -29,8 +29,15 @@ export default function Login() {
     <div style={styles.page}>
       <div style={styles.card}>
         <div style={styles.logoBox}>
-          <span style={styles.logoText}>BCX</span>
-          <span style={styles.logoSub}>FINANCE</span>
+          <Link to="/">
+            <img 
+              src="/logo-optimized.png" 
+              alt="BCX Finance" 
+              style={{ height: '80px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            />
+          </Link>
         </div>
         <p style={styles.tagline}>Cercle des Investisseurs</p>
 
