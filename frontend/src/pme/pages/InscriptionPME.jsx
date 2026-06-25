@@ -1,6 +1,6 @@
 // INSCRIPTION PME — BCX Finance | Auteur : Parfait Eric Yao
 import { useState, useRef, useEffect } from 'react';
-import FlagImg from '../../components/PME/FlagImg';
+import FlagImg from '../components/FlagImg';
 import { useNavigate } from 'react-router-dom';
 
 // ── DONNÉES PAYS ─────────────────────────────────────────────

@@ -51,7 +51,7 @@ export default function AyantsDroit() {
   return (
     <div style={styles.page}>
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>FINANCE</span></span>
+        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <button style={styles.backBtn} onClick={() => navigate('/profil')}>← Profil</button>
       </nav>
 

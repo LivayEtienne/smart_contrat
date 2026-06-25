@@ -1,6 +1,11 @@
-'use strict';
-const { creerDepot, validerDepot, refuserDepot, mettreAJourWallet: mettreAJourWalletService  } = require('../services/depotService');
-const { Depot, Compte, ConversionToken, Investisseur } = require('../models');
+"use strict";
+const {
+  creerDepot,
+  validerDepot,
+  refuserDepot,
+  mettreAJourWallet: mettreAJourWalletService,
+} = require("../services/depotService");
+const { Depot, Compte, ConversionToken, Investisseur } = require("../models");
 
 // POST /api/depots — Créer un dépôt (investisseur connecté)
 const nouveauDepot = async (req, res) => {
@@ -9,19 +14,20 @@ const nouveauDepot = async (req, res) => {
 
     if (!montant || !devise_origine || !voie) {
       return res.status(400).json({
-        message: 'Champs obligatoires manquants : montant, devise_origine, voie'
+        message:
+          "Champs obligatoires manquants : montant, devise_origine, voie",
       });
     }
 
-    if (!['A', 'B'].includes(voie)) {
+    if (!["A", "B"].includes(voie)) {
       return res.status(400).json({
-        message: 'La voie doit être A (FCFA/virement) ou B (crypto)'
+        message: "La voie doit être A (FCFA/virement) ou B (crypto)",
       });
     }
 
-    if (!['FCFA', 'USD', 'CRYPTO'].includes(devise_origine)) {
+    if (!["FCFA", "USD", "CRYPTO"].includes(devise_origine)) {
       return res.status(400).json({
-        message: 'devise_origine doit être FCFA, USD ou CRYPTO'
+        message: "devise_origine doit être FCFA, USD ou CRYPTO",
       });
     }
 
@@ -31,12 +37,12 @@ const nouveauDepot = async (req, res) => {
       devise_origine,
       moyen_paiement,
       voie,
-      tx_hash
+      tx_hash,
     });
 
     res.status(201).json({
-      message: 'Dépôt soumis avec succès, en attente de validation',
-      depot
+      message: "Dépôt soumis avec succès, en attente de validation",
+      depot,
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -48,11 +54,13 @@ const mesDepots = async (req, res) => {
   try {
     const depots = await Depot.findAll({
       where: { investisseur_id: req.investisseur.id },
-      include: [{
-        model: ConversionToken,
-        required: false
-      }],
-      order: [['date_depot', 'DESC']]
+      include: [
+        {
+          model: ConversionToken,
+          required: false,
+        },
+      ],
+      order: [["date_depot", "DESC"]],
     });
 
     res.json(depots);
@@ -65,15 +73,23 @@ const mesDepots = async (req, res) => {
 const monCompte = async (req, res) => {
   try {
     const compte = await Compte.findOne({
-      where: { investisseur_id: req.investisseur.id }
+      where: { investisseur_id: req.investisseur.id },
     });
 
     if (!compte) {
-      return res.status(404).json({ message: 'Compte introuvable' });
+      return res.status(404).json({ message: "Compte introuvable" });
     }
 
     const investisseur = await Investisseur.findByPk(req.investisseur.id, {
-      attributes: ['id', 'nom', 'prenom', 'email', 'niveau', 'wallet_address', 'statut']
+      attributes: [
+        "id",
+        "nom",
+        "prenom",
+        "email",
+        "niveau",
+        "wallet_address",
+        "statut",
+      ],
     });
 
     res.json({ compte, investisseur });
@@ -90,14 +106,14 @@ const valider = async (req, res) => {
     // On récupère la voie depuis le dépôt en base — pas besoin de la passer en body
     const depot = await Depot.findByPk(depot_id);
     if (!depot) {
-      return res.status(404).json({ message: 'Dépôt introuvable' });
+      return res.status(404).json({ message: "Dépôt introuvable" });
     }
 
     const result = await validerDepot(depot_id, req.investisseur.id);
 
     res.json({
-      message: 'Dépôt validé avec succès',
-      ...result
+      message: "Dépôt validé avec succès",
+      ...result,
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -111,14 +127,16 @@ const refuser = async (req, res) => {
     const { motif } = req.body;
 
     if (!motif) {
-      return res.status(400).json({ message: 'Un motif de refus est obligatoire' });
+      return res
+        .status(400)
+        .json({ message: "Un motif de refus est obligatoire" });
     }
 
     const depot = await refuserDepot(depot_id, req.investisseur.id, motif);
 
     res.json({
-      message: 'Dépôt refusé',
-      depot
+      message: "Dépôt refusé",
+      depot,
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -136,14 +154,14 @@ const tousLesDepots = async (req, res) => {
       include: [
         {
           model: Investisseur,
-          attributes: ['nom', 'prenom', 'email', 'niveau', 'wallet_address']
+          attributes: ["nom", "prenom", "email", "niveau", "wallet_address"],
         },
         {
           model: ConversionToken,
-          required: false
-        }
+          required: false,
+        },
       ],
-      order: [['date_depot', 'DESC']]
+      order: [["date_depot", "DESC"]],
     });
 
     res.json(depots);
@@ -157,10 +175,13 @@ const mettreAJourWallet = async (req, res) => {
   try {
     const { wallet_address } = req.body;
     if (!wallet_address) {
-      return res.status(400).json({ message: 'wallet_address requis' });
+      return res.status(400).json({ message: "wallet_address requis" });
     }
-    const result = await mettreAJourWalletService(req.investisseur.id, wallet_address);
-    res.json({ message: 'Wallet mis à jour avec succès', ...result });
+    const result = await mettreAJourWalletService(
+      req.investisseur.id,
+      wallet_address,
+    );
+    res.json({ message: "Wallet mis à jour avec succès", ...result });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -173,5 +194,5 @@ module.exports = {
   valider,
   refuser,
   tousLesDepots,
-  mettreAJourWallet
+  mettreAJourWallet,
 };

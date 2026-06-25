@@ -65,7 +65,7 @@ export default function AdminPanel() {
     <div style={styles.page}>
       {/* BARRE DE NAVIGATION */}
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>ADMIN</span></span>
+        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <div style={styles.navRight}>
           <div style={{ textAlign: 'right' }}>
             <p style={styles.navUser}>{user.prenom} {user.nom}</p>

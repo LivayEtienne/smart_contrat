@@ -12,11 +12,15 @@ import TableBord from './pages/TableBord';
 // ── Pages PME (Groupe 1) ──────────────────────────────────────
 import Landing from './pages/Landing';
 import InscriptionPME from './pages/PME/InscriptionPME';
+import ConnexionPME from './pages/PME/ConnexionPME';
 import DashboardPME from './pages/PME/DashboardPME';
 import NouvelleTransaction from './pages/PME/NouvelleTransaction';
 import ScoreBCX from './pages/PME/ScoreBCX';
 import RapportMensuel from './pages/PME/RapportMensuel';
 import ProfilPME from './pages/PME/ProfilPME';
+
+// ── Pages investisseur publiques ─────────────────────────────
+import InscriptionInvestisseur from './pages/InscriptionInvestisseur';
 
 // ── Composants ────────────────────────────────────────────────
 import ProtectedRoute from './components/ProtectedRoute';
@@ -46,6 +50,7 @@ export default function App() {
 
         {/* ── Auth investisseur ─────────────────────────────── */}
         <Route path="/login" element={<Login />} />
+        <Route path="/inscription" element={<InscriptionInvestisseur />} />
 
         {/* ── Pages investisseur ────────────────────────────── */}
         <Route path="/dashboard" element={
@@ -69,6 +74,7 @@ export default function App() {
 
         {/* ── Pages PME ─────────────────────────────────────── */}
         <Route path="/pme/inscription" element={<InscriptionPME />} />
+        <Route path="/pme/connexion" element={<ConnexionPME />} />
         <Route path="/pme/dashboard" element={
           <ProtectedRoutePME><LayoutPME><DashboardPME /></LayoutPME></ProtectedRoutePME>
         } />
