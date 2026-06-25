@@ -129,6 +129,7 @@ export default function Profil() {
     <div style={styles.page}>
       {/* NAVBAR */}
       <nav style={styles.nav}>
+        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <img
             src="/logo-optimized.png"

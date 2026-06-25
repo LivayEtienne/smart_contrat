@@ -81,7 +81,7 @@ export default function Dashboard() {
   return (
     <div style={styles.page}>
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>FINANCE</span></span>
+        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <div style={styles.navRight}>
           <span style={styles.navUser}>{user.prenom} {user.nom}</span>
           <button style={styles.profilBtn} onClick={() => navigate('/profil')}>

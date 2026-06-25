@@ -73,6 +73,9 @@ app.use('/api/depots', require('./routes/depot'));
 app.use('/api/ayants-droit', require('./routes/ayantDroitRoute'));
 app.use('/api/admin', require('./routes/admin'));
 
+// ── MODULE PME — Groupe 1 (Parfait Eric Yao) ──────────────────
+app.use('/api/pme', require('./routes/pme'));
+
 // ── TEST ROUTE ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({ message: 'BCX Finance API is running' });
@@ -115,6 +118,13 @@ sequelize.authenticate()
       console.log('  GET    /api/ayants-droit/admin/tous');
       console.log('  PUT    /api/ayants-droit/:id/valider');
       console.log('  PUT    /api/ayants-droit/:id/refuser');
+      console.log('  ─────────────────────────────');
+      console.log('  POST   /api/pme/inscription');
+      console.log('  POST   /api/pme/connexion');
+      console.log('  GET    /api/pme/dashboard');
+      console.log('  POST   /api/pme/transactions');
+      console.log('  GET    /api/pme/score');
+      console.log('  GET    /api/pme/rapport-pdf');
       console.log('─────────────────────────────────────');
     });
   })
@@ -122,5 +132,8 @@ sequelize.authenticate()
     console.error('❌ Erreur de connexion à la base de données :', err.message);
     process.exit(1);
   });
+<<<<<<< groupe1
+=======
 
 app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+>>>>>>> develop

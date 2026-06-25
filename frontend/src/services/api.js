@@ -29,6 +29,11 @@ export const authService = {
   register: (data) => api.post('/auth/inscription', data),
 };
 
+export const pmeAuthService = {
+  connexion: (data) => api.post('/pme/connexion', data),
+  inscription: (data) => api.post('/pme/inscription', data),
+};
+
 export const depotService = {
   creer: (data) => api.post('/depots', data),
   mesDepots: () => api.get('/depots'),
