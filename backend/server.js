@@ -20,7 +20,6 @@ console.log('Loaded env file:', envLoaded || 'none');
 console.log('JWT_SECRET present:', Boolean(process.env.JWT_SECRET));
 
 require('dotenv').config();
-require('express-async-errors');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
