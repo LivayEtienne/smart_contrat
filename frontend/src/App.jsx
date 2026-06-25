@@ -27,12 +27,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedRoutePME from './pme/components/ProtectedRoutePME';
 import Layout from './components/Layout';
 import LayoutPME from './pme/layout/LayoutPME';
-import ToastContainer from './components/ToastContainer';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ToastContainer />
       <Routes>
 
         {/* ── Page d'accueil ────────────────────────────────── */}
