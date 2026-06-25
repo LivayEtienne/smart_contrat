@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { depotService } from '../services/api';
 import useOnlineStatus from '../hooks/useOnlineStatus';
 import {
@@ -129,7 +129,15 @@ export default function Profil() {
     <div style={styles.page}>
       {/* NAVBAR */}
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>FINANCE</span></span>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img
+            src="/logo-optimized.png"
+            alt="BCX Finance"
+            style={{ height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </Link>
         <div style={styles.navRight}>
           <button style={styles.backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
         </div>
@@ -275,7 +283,7 @@ const styles = {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '16px 32px', borderBottom: '1px solid #1a1a1a', background: '#0D0D0D',
   },
-  navLogo: { fontSize: '18px', fontWeight: '800', color: '#fff', letterSpacing: '2px' },
+
   navRight: { display: 'flex', alignItems: 'center', gap: '16px' },
   backBtn: {
     background: 'transparent', border: '1px solid #2a2a2a', color: '#888',
