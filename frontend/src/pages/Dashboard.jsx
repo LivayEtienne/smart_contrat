@@ -81,15 +81,6 @@ export default function Dashboard() {
   return (
     <div style={styles.page}>
       <nav style={styles.nav}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img 
-            src="/logo-optimized.png" 
-            alt="BCX Finance" 
-            style={{ height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          />
-        </Link>
         <div style={styles.navRight}>
           <span style={styles.navUser}>{user.prenom} {user.nom}</span>
           <button style={styles.profilBtn} onClick={() => navigate('/profil')}>
