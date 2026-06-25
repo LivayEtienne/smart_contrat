@@ -1,7 +1,7 @@
 // INSCRIPTION PME — BCX Finance | Auteur : Parfait Eric Yao
 import { useState, useRef, useEffect } from 'react';
 import FlagImg from '../../components/PME/FlagImg';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 // ── DONNÉES PAYS ─────────────────────────────────────────────
 const PAYS = [
@@ -418,7 +418,7 @@ export default function InscriptionPME() {
           </form>
 
           <p style={S.link}>Déjà inscrit ?{' '}
-            <span style={S.linkOr} onClick={() => navigate('/pme/connexion')}>Se connecter</span>
+            <Link to="/pme/connexion" style={{...S.linkOr, textDecoration: 'none'}}>Se connecter</Link>
           </p>
 
           <div style={S.conf}>
