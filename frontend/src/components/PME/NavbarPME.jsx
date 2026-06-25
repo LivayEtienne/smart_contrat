@@ -30,7 +30,7 @@ export default function NavbarPME() {
         <div style={s.navInner}>
           {/* Logo */}
           <div style={s.logo} onClick={() => navigate('/pme/dashboard')}>
-            <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 38, objectFit: 'contain' }} />
+            BCX <span style={{ color: '#D4AF37' }}>PME</span>
           </div>
 
           {/* Liens */}

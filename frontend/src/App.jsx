@@ -11,26 +11,38 @@ import TableBord from './pages/TableBord';
 
 // ── Pages PME (Groupe 1) ──────────────────────────────────────
 import Landing from './pages/Landing';
-import InscriptionPME from './pme/pages/InscriptionPME';
-import ConnexionPME from './pme/pages/ConnexionPME';
+import InscriptionPME from './pages/PME/InscriptionPME';
+import ConnexionPME from './pages/PME/ConnexionPME';
+import DashboardPME from './pages/PME/DashboardPME';
+import NouvelleTransaction from './pages/PME/NouvelleTransaction';
+import ScoreBCX from './pages/PME/ScoreBCX';
+import RapportMensuel from './pages/PME/RapportMensuel';
+import ProfilPME from './pages/PME/ProfilPME';
 
 // ── Pages investisseur publiques ─────────────────────────────
 import InscriptionInvestisseur from './pages/InscriptionInvestisseur';
-import DashboardPME from './pme/pages/DashboardPME';
-import NouvelleTransaction from './pme/pages/NouvelleTransaction';
-import ScoreBCX from './pme/pages/ScoreBCX';
-import RapportMensuel from './pme/pages/RapportMensuel';
-import ProfilPME from './pme/pages/ProfilPME';
 
 // ── Composants ────────────────────────────────────────────────
 import ProtectedRoute from './components/ProtectedRoute';
-import ProtectedRoutePME from './pme/components/ProtectedRoutePME';
+import ProtectedRoutePME from './components/ProtectedRoutePME';
 import Layout from './components/Layout';
-import LayoutPME from './pme/layout/LayoutPME';
+import NavbarPME from './components/PME/NavbarPME';
+import ToastContainer from './components/ToastContainer';
+
+// Wrapper qui ajoute la navbar PME
+function LayoutPME({ children }) {
+  return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0A' }}>
+      <NavbarPME />
+      <div style={{ paddingBottom: 70 }}>{children}</div>
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Routes>
 
         {/* ── Page d'accueil ────────────────────────────────── */}

@@ -1,49 +1,65 @@
-// ToastContainer.jsx — BCX Finance
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+// SYSTÈME DE TOASTS — BCX Finance | Auteur : Parfait Eric Yao
+import { useState, useEffect, useCallback } from 'react';
 
-const ToastCtx = createContext(null);
+// ── Hook global useToast ───────────────────────────────────────
+let _setToasts = null;
 
 export function useToast() {
-  return useContext(ToastCtx);
+  return {
+    success: (msg) => _setToasts && _setToasts(p => [...p, { id: Date.now(), type: 'success', msg }]),
+    error:   (msg) => _setToasts && _setToasts(p => [...p, { id: Date.now(), type: 'error',   msg }]),
+    info:    (msg) => _setToasts && _setToasts(p => [...p, { id: Date.now(), type: 'info',    msg }]),
+    warning: (msg) => _setToasts && _setToasts(p => [...p, { id: Date.now(), type: 'warning', msg }]),
+  };
 }
 
-let _addToast = null;
+// ── Rétrocompatibilité : fonction globale toast() ──────────────
 export function toast(msg, type = 'info') {
-  if (_addToast) _addToast(msg, type);
+  if (_setToasts) _setToasts(p => [...p, { id: Date.now(), type, msg }]);
 }
 
+// ── Composant ToastContainer ───────────────────────────────────
 export default function ToastContainer() {
   const [toasts, setToasts] = useState([]);
+  _setToasts = setToasts;
 
-  const add = useCallback((msg, type = 'info') => {
-    const id = Date.now();
-    setToasts(p => [...p, { id, msg, type }]);
-    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
+  const retirer = useCallback((id) => {
+    setToasts(p => p.filter(t => t.id !== id));
   }, []);
 
-  useEffect(() => { _addToast = add; return () => { _addToast = null; }; }, [add]);
+  useEffect(() => {
+    if (toasts.length === 0) return;
+    const timer = setTimeout(() => retirer(toasts[0].id), 3500);
+    return () => clearTimeout(timer);
+  }, [toasts, retirer]);
 
-  const colors = {
-    success: { bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.3)', icon: '✓', color: '#22c55e' },
-    error:   { bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.3)',  icon: '✕', color: '#ef4444' },
-    warning: { bg: 'rgba(245,179,47,0.12)', border: 'rgba(245,179,47,0.3)', icon: '⚠', color: '#F5B32F' },
-    info:    { bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.3)', icon: 'ℹ', color: '#6366f1' },
+  const cfg = {
+    success: { bg: '#0d1f0d', border: '#1a4d1a', color: '#4CAF50', icon: '✓' },
+    error:   { bg: '#1f0d0d', border: '#4d1a1a', color: '#FF4444', icon: '✕' },
+    info:    { bg: '#0d1220', border: '#1a2a4d', color: '#5B9BD5', icon: 'ℹ' },
+    warning: { bg: '#1f180d', border: '#4d3a1a', color: '#F5A623', icon: '⚠' },
   };
 
-  if (!toasts.length) return null;
-
   return (
-    <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 }}>
+    <div style={s.container}>
       {toasts.map(t => {
-        const c = colors[t.type] || colors.info;
+        const c = cfg[t.type] || cfg.info;
         return (
-          <div key={t.id} style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, backdropFilter: 'blur(12px)', boxShadow: '0 8px 24px rgba(0,0,0,0.4)', animation: 'slideIn 0.2s ease' }}>
-            <span style={{ color: c.color, fontWeight: 700, fontSize: 16, flexShrink: 0 }}>{c.icon}</span>
-            <span style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.5 }}>{t.msg}</span>
+          <div key={t.id} style={{ ...s.toast, background: c.bg, border: `1px solid ${c.border}` }}>
+            <span style={{ ...s.icon, color: c.color, borderColor: c.border }}>{c.icon}</span>
+            <span style={s.msg}>{t.msg}</span>
+            <button style={s.close} onClick={() => retirer(t.id)}>×</button>
           </div>
         );
       })}
-      <style>{`@keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }`}</style>
     </div>
   );
 }
+
+const s = {
+  container: { position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 },
+  toast: { borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', animation: 'slideIn 0.3s ease', fontFamily: "'Inter',sans-serif", minWidth: 260 },
+  icon: { borderRadius: 6, border: '1px solid', fontSize: 13, fontWeight: 700, height: 24, minWidth: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  msg: { color: '#ccc', fontSize: 14, flex: 1, lineHeight: 1.4 },
+  close: { background: 'transparent', border: 'none', color: '#333', cursor: 'pointer', fontSize: 18, padding: '0 2px' },
+};
