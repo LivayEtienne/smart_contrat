@@ -1,5 +1,5 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, TrendingUp, LogOut } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { LayoutDashboard, TrendingUp, Wallet, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: <LayoutDashboard size={18} />, label: 'Tableau de bord', path: '/tableau-bord' },
     { icon: <TrendingUp size={18} />, label: 'Mes investissements', path: '/dashboard' },
+    { icon: <Wallet size={18} />, label: 'Mes dépôts', path: '/depot/mes-depots' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -103,11 +104,19 @@ export default function Sidebar() {
 
       <div className="beam-card-container">
         <div className="sidebar-content-layer">
-          
+
           {/* LOGO */}
           <div style={styles.logoBox}>
-            <span style={styles.logoText}>BCX</span>
-            <span style={styles.logoSub}>FINANCE</span>
+            <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 44, objectFit: 'contain' }} />
+            <Link to="/">
+              <img
+                src="/logo-optimized.png"
+                alt="BCX Finance"
+                style={{ height: '64px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              />
+            </Link>
           </div>
 
           {/* USER INFO */}
@@ -222,9 +231,11 @@ const styles = {
     margin: 0,
   },
   userRole: {
-    color: '#555562',
+    color: '#A1A1AA', // Changed from #555562 for better readability
     fontSize: '11px',
+    fontWeight: '500',
     margin: '2px 0 0',
+    letterSpacing: '0.5px',
   },
   divider: {
     height: '1px',
