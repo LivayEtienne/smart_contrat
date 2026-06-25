@@ -13,6 +13,11 @@ export function useToast() {
   };
 }
 
+// ── Rétrocompatibilité : fonction globale toast() ──────────────
+export function toast(msg, type = 'info') {
+  if (_setToasts) _setToasts(p => [...p, { id: Date.now(), type, msg }]);
+}
+
 // ── Composant ToastContainer ───────────────────────────────────
 export default function ToastContainer() {
   const [toasts, setToasts] = useState([]);

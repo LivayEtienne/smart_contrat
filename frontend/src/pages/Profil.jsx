@@ -61,7 +61,7 @@ export default function Profil() {
     <div style={styles.page}>
       {/* NAVBAR */}
       <nav style={styles.nav}>
-        <span style={styles.navLogo}>BCX <span style={{ color: '#D4AF37' }}>FINANCE</span></span>
+        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <div style={styles.navRight}>
           <button style={styles.backBtn} onClick={() => navigate('/dashboard')}>← Dashboard</button>
         </div>
