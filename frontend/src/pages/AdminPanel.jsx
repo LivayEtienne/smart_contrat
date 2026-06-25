@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { depotService } from '../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import { depotService, adminService } from '../services/api';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -11,6 +11,10 @@ export default function AdminPanel() {
   const [actionId, setActionId] = useState(null);
   const [motifRefus, setMotifRefus] = useState('');
   const [showMotif, setShowMotif] = useState(null);
+
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState('');
 
   // États pour gérer l'animation de survol via JS pour les cartes (alternative propre aux pseudo-classes CSS)
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -28,6 +32,22 @@ export default function AdminPanel() {
   };
 
   useEffect(() => { fetchDepots(); }, [filtre]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const res = await adminService.getStats();
+        setStats(res.data);
+      } catch (err) {
+        console.error(err);
+        setStatsError('Erreur de chargement des statistiques');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const handleValider = async (id) => {
     setActionId(id);
@@ -65,7 +85,19 @@ export default function AdminPanel() {
     <div style={styles.page}>
       {/* BARRE DE NAVIGATION */}
       <nav style={styles.nav}>
+<<<<<<< groupe1
         <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
+=======
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img
+            src="/logo-optimized.png"
+            alt="BCX Finance Admin"
+            style={{ height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </Link>
+>>>>>>> develop
         <div style={styles.navRight}>
           <div style={{ textAlign: 'right' }}>
             <p style={styles.navUser}>{user.prenom} {user.nom}</p>
@@ -81,6 +113,34 @@ export default function AdminPanel() {
           <h1 style={styles.title}>Gestion des dépôts</h1>
           <span style={styles.badgeCount}>{depots.length} {depots.length > 1 ? 'flux' : 'flux'}</span>
         </div>
+
+        {/* STATISTIQUES */}
+        {statsLoading ? (
+          <div style={styles.statsCard}>
+            <p style={{ color: '#D4AF37', margin: 0 }}>Chargement des statistiques...</p>
+          </div>
+        ) : statsError ? (
+          <div style={styles.statsCard}>
+            <p style={{ color: '#FF4444', margin: 0 }}>{statsError}</p>
+          </div>
+        ) : stats && (
+          <div style={styles.statsGrid}>
+            <div style={styles.statBox}>
+              <span style={styles.infoLabel}>Total Investisseurs</span>
+              <span style={styles.statValue}>{stats.total_investisseurs}</span>
+            </div>
+            <div style={styles.statBox}>
+              <span style={styles.infoLabel}>Total Dépôts</span>
+              <span style={styles.statValue}>{stats.total_depots}</span>
+            </div>
+            <div style={{ ...styles.statBox, borderColor: '#D4AF37', background: 'rgba(212,175,55,0.02)' }}>
+              <span style={styles.infoLabel}>Tokens BCX Distribués</span>
+              <span style={{ ...styles.statValue, color: '#D4AF37' }}>
+                {stats.total_bcx_distribues?.toLocaleString() || 0}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* FILTRES ANIMÉS */}
         <div style={styles.filtres}>
@@ -114,10 +174,10 @@ export default function AdminPanel() {
           <div style={styles.list}>
             {depots.map((d, index) => {
               const isHovered = hoveredCard === d.id;
-              
+
               return (
-                <div 
-                  key={d.id} 
+                <div
+                  key={d.id}
                   style={{
                     ...styles.depotCard,
                     ...(isHovered ? styles.depotCardHover : {}),
@@ -134,9 +194,9 @@ export default function AdminPanel() {
                       </p>
                       <p style={styles.investEmail}>{d.Investisseur?.email}</p>
                     </div>
-                    <span style={{ 
-                      ...styles.statut, 
-                      color: statutColor[d.statut], 
+                    <span style={{
+                      ...styles.statut,
+                      color: statutColor[d.statut],
                       background: statutBg[d.statut],
                       border: `1px solid rgba(${d.statut === 'valide' ? '76,175,80' : d.statut === 'refuse' ? '255,68,68' : '245,166,35'}, 0.15)`
                     }}>
@@ -245,10 +305,10 @@ export default function AdminPanel() {
 
 // STYLES AVEC TRANSITIONS ET LOGIQUE PREMIUM FINANCIÈRE
 const styles = {
-  page: { 
-    minHeight: '100vh', 
-    background: '#060608', 
-    fontFamily: "'Inter', system-ui, -apple-system, sans-serif", 
+  page: {
+    minHeight: '100vh',
+    background: '#060608',
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     color: '#fff',
     WebkitFontSmoothing: 'antialiased'
   },
@@ -268,10 +328,14 @@ const styles = {
   content: { maxWidth: '900px', margin: '0 auto', padding: '40px 24px' },
   headerRow: { display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '28px' },
   title: { color: '#fff', fontSize: '24px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' },
-  badgeCount: { 
+  badgeCount: {
     background: '#121217', color: '#8E8E93', fontSize: '11px', fontWeight: '600',
-    padding: '4px 10px', borderRadius: '20px', border: '1px solid #22222A' 
+    padding: '4px 10px', borderRadius: '20px', border: '1px solid #22222A'
   },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' },
+  statBox: { background: '#101014', border: '1px solid #1A1A22', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px' },
+  statValue: { color: '#fff', fontSize: '24px', fontWeight: '800' },
+  statsCard: { background: '#101014', border: '1px solid #1A1A22', borderRadius: '12px', padding: '20px', marginBottom: '28px', textAlign: 'center' },
   filtres: { display: 'flex', gap: '10px', marginBottom: '32px' },
   filtre: {
     background: '#101014', border: '1px solid #1F1F27', color: '#8E8E93',
@@ -304,9 +368,9 @@ const styles = {
   investName: { color: '#fff', fontSize: '16px', fontWeight: '600', margin: 0 },
   investEmail: { color: '#636366', fontSize: '13px', margin: '3px 0 0' },
   statut: { fontSize: '11px', fontWeight: '700', padding: '5px 12px', borderRadius: '30px', letterSpacing: '0.3px' },
-  depotInfo: { 
-    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px', 
-    background: '#101014', padding: '16px', borderRadius: '12px', border: '1px solid #181820' 
+  depotInfo: {
+    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px',
+    background: '#101014', padding: '16px', borderRadius: '12px', border: '1px solid #181820'
   },
   infoItem: { display: 'flex', flexDirection: 'column', gap: '4px' },
   infoLabel: { color: '#636366', fontSize: '11px', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase' },
@@ -322,9 +386,9 @@ const styles = {
     padding: '10px 24px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: '600',
     transition: 'all 0.2s ease',
   },
-  motifBox: { 
-    marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', 
-    background: 'rgba(255,68,68,0.02)', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.15)' 
+  motifBox: {
+    marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px',
+    background: 'rgba(255,68,68,0.02)', borderRadius: '12px', border: '1px solid rgba(255,68,68,0.15)'
   },
   motifInput: {
     background: '#060608', border: '1px solid #22222A', borderRadius: '8px',

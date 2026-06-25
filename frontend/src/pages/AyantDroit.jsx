@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { ayantsDroitService } from '../services/api';
 
 export default function AyantsDroit() {
   const navigate = useNavigate();
@@ -11,18 +12,16 @@ export default function AyantsDroit() {
   });
   const [msg, setMsg] = useState('');
 
-  // Données mockées — à remplacer par appel API
   useEffect(() => {
-    setAyants([
-      {
-        id: '1',
-        nom: 'Diallo',
-        prenom: 'Fatoumata',
-        email: 'fatoumata@email.com',
-        lien_parente: 'Épouse',
-        statut: 'en_attente'
+    const fetchAyants = async () => {
+      try {
+        const res = await ayantsDroitService.liste();
+        setAyants(res.data);
+      } catch (err) {
+        console.error('Erreur chargement ayants droit :', err);
       }
-    ]);
+    };
+    fetchAyants();
   }, []);
 
   const handleSubmit = async () => {
@@ -32,9 +31,8 @@ export default function AyantsDroit() {
     }
     setLoading(true);
     try {
-      // TODO : appel API quand le backend sera prêt
-      // await ayantsDroitService.ajouter(form);
-      setAyants(prev => [...prev, { ...form, id: Date.now().toString(), statut: 'en_attente' }]);
+      const res = await ayantsDroitService.ajouter(form);
+      setAyants(prev => [...prev, res.data]);
       setForm({ nom: '', prenom: '', email: '', lien_parente: '' });
       setShowForm(false);
       setMsg('✅ Ayant droit ajouté, en attente de validation');
@@ -52,6 +50,15 @@ export default function AyantsDroit() {
     <div style={styles.page}>
       <nav style={styles.nav}>
         <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img
+            src="/logo-optimized.png"
+            alt="BCX Finance"
+            style={{ height: '36px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          />
+        </Link>
         <button style={styles.backBtn} onClick={() => navigate('/profil')}>← Profil</button>
       </nav>
 
@@ -184,7 +191,7 @@ const styles = {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '16px 32px', borderBottom: '1px solid #1a1a1a', background: '#0D0D0D',
   },
-  navLogo: { fontSize: '18px', fontWeight: '800', color: '#fff', letterSpacing: '2px' },
+
   backBtn: {
     background: 'transparent', border: '1px solid #2a2a2a', color: '#888',
     padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',

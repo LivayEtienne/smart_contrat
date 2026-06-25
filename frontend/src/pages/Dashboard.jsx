@@ -1,16 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { depotService } from '../services/api';
+import useOnlineStatus from '../hooks/useOnlineStatus';
+import {
+  getCachedCompte,
+  setCachedCompte,
+  getCachedDepots,
+  setCachedDepots
+} from '../services/cacheService';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const online = useOnlineStatus();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [compte, setCompte] = useState(null);
   const [depots, setDepots] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncMessage, setSyncMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      if (!online) {
+        const cachedCompte = getCachedCompte();
+        const cachedDepots = getCachedDepots();
+        if (cachedCompte) setCompte(cachedCompte);
+        setDepots(cachedDepots);
+        setSyncMessage('Mode hors ligne : affichage des données mises en cache.');
+        setLoading(false);
+        return;
+      }
+
       try {
         const [compteRes, depotsRes] = await Promise.all([
           depotService.monCompte(),
@@ -18,14 +38,22 @@ export default function Dashboard() {
         ]);
         setCompte(compteRes.data);
         setDepots(depotsRes.data);
+        setCachedCompte(compteRes.data);
+        setCachedDepots(depotsRes.data);
+        setSyncMessage('Connecté au backend. Données synchronisées.');
       } catch (err) {
         console.error(err);
+        const cachedCompte = getCachedCompte();
+        const cachedDepots = getCachedDepots();
+        if (cachedCompte) setCompte(cachedCompte);
+        setDepots(cachedDepots);
+        setSyncMessage('Erreur réseau. Affichage des données en cache.');
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [online]);
 
   const logout = () => {
     localStorage.clear();
@@ -52,7 +80,6 @@ export default function Dashboard() {
 
   return (
     <div style={styles.page}>
-      {/* NAVBAR */}
       <nav style={styles.nav}>
         <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
         <div style={styles.navRight}>
@@ -65,8 +92,10 @@ export default function Dashboard() {
       </nav>
 
       <div style={styles.content}>
+        <div style={styles.syncInfo}>
+          <span style={styles.syncInfoText}>{syncMessage}</span>
+        </div>
 
-        {/* NIVEAU BADGE */}
         {compte?.investisseur?.niveau && (
           <div style={styles.nivBadge}>
             <span style={{ color: niveauColor[compte.investisseur.niveau] }}>
@@ -75,7 +104,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* STATS */}
         <div style={styles.statsGrid}>
           <div style={styles.statCard}>
             <p style={styles.statLabel}>Total investi</p>
@@ -97,7 +125,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ACTIONS */}
         <div style={styles.actionsRow}>
           <button style={styles.newDepotBtn} onClick={() => navigate('/depot/nouveau')}>
             + Nouveau dépôt
@@ -107,7 +134,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* LISTE DÉPÔTS */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Mes dépôts</h2>
           {depots.length === 0 ? (
@@ -124,6 +150,7 @@ export default function Dashboard() {
                 <span>Devise</span>
                 <span>Voie</span>
                 <span>Statut</span>
+                <span>Tx</span>
                 <span>Date</span>
               </div>
               {depots.map((d) => (
@@ -133,6 +160,18 @@ export default function Dashboard() {
                   <span>Voie {d.voie}</span>
                   <span style={{ color: statutColor[d.statut], fontWeight: 600 }}>
                     {d.statut.replace('_', ' ')}
+                  </span>
+                  <span>
+                    {d.tx_hash ? (
+                      <a
+                        href={`https://sepolia.etherscan.io/tx/${d.tx_hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={styles.txLink}
+                      >
+                        {d.tx_hash.slice(0, 6)}...{d.tx_hash.slice(-4)}
+                      </a>
+                    ) : '—'}
                   </span>
                   <span style={{ color: '#555', fontSize: '12px' }}>
                     {new Date(d.date_depot).toLocaleDateString('fr-FR')}
@@ -155,7 +194,7 @@ const styles = {
   },
   navLogo: { fontSize: '18px', fontWeight: '800', color: '#fff', letterSpacing: '2px' },
   navRight: { display: 'flex', alignItems: 'center', gap: '12px' },
-  navUser: { color: '#888', fontSize: '14px' },
+  navUser: { color: '#E5E5EA', fontSize: '14px', fontWeight: '500' },
   profilBtn: {
     background: 'transparent', border: '1px solid #D4AF37', color: '#D4AF37',
     padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',
@@ -165,6 +204,11 @@ const styles = {
     padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',
   },
   content: { maxWidth: '900px', margin: '0 auto', padding: '32px 24px' },
+  syncInfo: {
+    marginBottom: '16px', padding: '14px 16px', borderRadius: '12px',
+    background: '#111', border: '1px solid #1a1a1a', color: '#888',
+  },
+  syncInfoText: { fontSize: '13px' },
   nivBadge: {
     display: 'inline-block', background: '#111', border: '1px solid #2a2a2a',
     borderRadius: '20px', padding: '6px 16px', marginBottom: '24px', fontSize: '13px',
@@ -200,13 +244,16 @@ const styles = {
   },
   table: { background: '#111', border: '1px solid #1a1a1a', borderRadius: '12px', overflow: 'hidden' },
   tableHeader: {
-    display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+    display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1.5fr 1fr',
     padding: '12px 20px', borderBottom: '1px solid #1a1a1a',
     color: '#555', fontSize: '12px', letterSpacing: '1px',
   },
   tableRow: {
-    display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr',
+    display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1.5fr 1fr',
     padding: '16px 20px', borderBottom: '1px solid #0f0f0f',
     color: '#ccc', fontSize: '14px', alignItems: 'center',
+  },
+  txLink: {
+    color: '#D4AF37', textDecoration: 'none', fontWeight: 600,
   },
 };

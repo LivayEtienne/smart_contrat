@@ -122,6 +122,20 @@ Ces opérations concernent notamment :
 - le verrouillage des tokens ;
 - la gestion de la blacklist ;
 - le transfert de propriété.
+```env
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+PRIVATE_KEY=<fournie par le Product Manager>
+DB_HOST=localhost
+DB_USER=<ton utilisateur MySQL>
+DB_PASSWORD=<ton mot de passe MySQL>
+DB_NAME=bcx_finance
+DB_DIALECT=mysql
+JWT_SECRET=<fournie par le Product Manager>
+PORT=3003
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+```
+
+La PRIVATE_KEY et le JWT_SECRET sont fournis directement par le Product Manager à chaque membre. Ils ne doivent jamais apparaître dans le code source ni dans un commit GitHub. Vérifier que .env est bien dans le .gitignore avant tout push.
 
 ### Protection contre l'adresse zéro
 
@@ -130,6 +144,21 @@ Le contrat empêche :
 - les transferts vers l'adresse zéro ;
 - les approbations vers l'adresse zéro ;
 - certaines opérations invalides.
+```bash
+cd backend
+npm install
+```
+
+> ⚠️ **Étape critique — Ne pas sauter !**
+> Sans ces deux commandes, la base de données sera vide et aucun compte ne fonctionnera.
+> ```bash
+> npx sequelize-cli db:migrate
+> npx sequelize-cli db:seed:all
+> ```
+
+```bash
+npm run dev
+```
 
 ### Protection des soldes verrouillés
 
@@ -188,6 +217,59 @@ Installer les dépendances :
 
 ```bash
 npm install
+npx hardhat run scripts/deploy.js --network bscTestnet
+```
+
+
+## Endpoints API disponibles
+
+Le backend expose les routes suivantes sur http://localhost:3003.
+
+Auth :
+POST /api/auth/inscription
+POST /api/auth/connexion
+
+Dépôts (investisseur) :
+POST /api/depots
+GET /api/depots
+GET /api/depots/compte
+PUT /api/depots/wallet
+
+Dépôts (admin) :
+GET /api/depots/admin/tous
+GET /api/depots/admin/transactions
+PUT /api/depots/:id/valider
+PUT /api/depots/:id/refuser
+
+Ayants droit (investisseur) :
+POST /api/ayants-droit
+GET /api/ayants-droit
+
+Ayants droit (admin) :
+GET /api/ayants-droit/admin/tous
+PUT /api/ayants-droit/:id/valider
+PUT /api/ayants-droit/:id/refuser
+
+Statistiques (admin) :
+GET /api/admin/stats
+  Retourne les statistiques globales (total_investisseurs, total_depots, total_bcx_distribues)
+
+
+## Sécurité de l'API (Mises à jour)
+
+- **Helmet & CORS** : Protection contre les vulnérabilités XSS et Clickjacking, et restriction des requêtes cross-origin via la variable `CORS_ALLOWED_ORIGINS`.
+- **Validation (express-validator)** : Toutes les données POST sont validées et nettoyées avant traitement métier.
+- **Rate Limiting** : La route de connexion est limitée à 5 tentatives par 15 minutes pour éviter le brute force.
+- **Gestion des erreurs** : Un middleware centralise et formatte les erreurs au format `{ "success": false, "message": "..." }`.
+
+## Comptes de test
+
+Admin : finance@bcx.com / Admin1234@
+Investisseur : investisseur@bcx.com / Test1234@ 
+ 
+
+
+## Intégration Backend (Node.js + ethers.js)
 
 ---
 

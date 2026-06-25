@@ -1,6 +1,7 @@
 'use strict';
 const router = require('express').Router();
 const auth = require('../middlewares/authMiddleware');
+const { validateNouveauDepot } = require('../middlewares/validationMiddleware');
 const {
   nouveauDepot,
   mesDepots,
@@ -12,7 +13,7 @@ const {
 } = require('../controllers/depotController');
 
 // ── ROUTES INVESTISSEUR ────────────────────────────────────────
-router.post('/', auth('investisseur'), nouveauDepot);
+router.post('/', auth('investisseur'), validateNouveauDepot, nouveauDepot);
 router.get('/', auth('investisseur'), mesDepots);
 router.get('/compte', auth('investisseur'), monCompte);
 router.put('/wallet', auth('investisseur'), mettreAJourWallet);
