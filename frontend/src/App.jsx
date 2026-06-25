@@ -1,101 +1,88 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// ── Pages investisseur (PM) ───────────────────────────────────
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NewDepot from './pages/NewDepot';
 import AdminPanel from './pages/AdminPanel';
 import Profil from './pages/Profil';
 import AyantsDroit from './pages/AyantDroit';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
 import TableBord from './pages/TableBord';
-// ── Pages PME (Léonie Gondo)
-import InscriptionPME from './pages/PME/InscriptionPME';
-import DashboardPME from './pages/PME/DashboardPME';
-import NouvelleTransaction from './pages/PME/NouvelleTransaction';
-import ScoreBCX from './pages/PME/ScoreBCX';
-import RapportMensuel from './pages/PME/RapportMensuel';
+
+// ── Pages PME (Groupe 1) ──────────────────────────────────────
+import Landing from './pages/Landing';
+import InscriptionPME from './pme/pages/InscriptionPME';
+import ConnexionPME from './pme/pages/ConnexionPME';
+
+// ── Pages investisseur publiques ─────────────────────────────
+import InscriptionInvestisseur from './pages/InscriptionInvestisseur';
+import DashboardPME from './pme/pages/DashboardPME';
+import NouvelleTransaction from './pme/pages/NouvelleTransaction';
+import ScoreBCX from './pme/pages/ScoreBCX';
+import RapportMensuel from './pme/pages/RapportMensuel';
+import ProfilPME from './pme/pages/ProfilPME';
+
+// ── Composants ────────────────────────────────────────────────
+import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoutePME from './pme/components/ProtectedRoutePME';
+import Layout from './components/Layout';
+import LayoutPME from './pme/layout/LayoutPME';
+import ToastContainer from './components/ToastContainer';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <Routes>
-        {/* Page publique */}
-        <Route path="/login" element={<Login />} />
 
-        {/* Pages investisseur — avec sidebar */}
+        {/* ── Page d'accueil ────────────────────────────────── */}
+        <Route path="/" element={<Landing />} />
+
+        {/* ── Auth investisseur ─────────────────────────────── */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/inscription" element={<InscriptionInvestisseur />} />
+
+        {/* ── Pages investisseur ────────────────────────────── */}
         <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Layout>
-              <Dashboard />
-            </Layout>
-          </ProtectedRoute>
+          <ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>
         } />
         <Route path="/depot/nouveau" element={
-          <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <NewDepot />
-            </Layout>
-          </ProtectedRoute>
+          <ProtectedRoute roleRequis="investisseur"><Layout><NewDepot /></Layout></ProtectedRoute>
         } />
         <Route path="/profil" element={
-          <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <Profil />
-            </Layout>
-          </ProtectedRoute>
+          <ProtectedRoute roleRequis="investisseur"><Layout><Profil /></Layout></ProtectedRoute>
         } />
         <Route path="/ayants-droit" element={
-          <ProtectedRoute roleRequis="investisseur">
-            <Layout>
-              <AyantsDroit />
-            </Layout>
-          </ProtectedRoute>
+          <ProtectedRoute roleRequis="investisseur"><Layout><AyantsDroit /></Layout></ProtectedRoute>
         } />
         <Route path="/tableau-bord" element={
-        <ProtectedRoute roleRequis="investisseur">
-          <Layout>
-            <TableBord />
-          </Layout>
-        </ProtectedRoute>
-      } />
-
-        {/* Page admin — sans sidebar investisseur */}
+          <ProtectedRoute roleRequis="investisseur"><Layout><TableBord /></Layout></ProtectedRoute>
+        } />
         <Route path="/admin" element={
-          <ProtectedRoute roleRequis="admin">
-            <AdminPanel />
-          </ProtectedRoute>
+          <ProtectedRoute roleRequis="admin"><AdminPanel /></ProtectedRoute>
         } />
 
-        {/* ── Pages PME (Léonie Gondo) ── */}
-        {/* Page d'inscription publique */}
+        {/* ── Pages PME ─────────────────────────────────────── */}
         <Route path="/pme/inscription" element={<InscriptionPME />} />
-        {/* Dashboard PME */}
+        <Route path="/pme/connexion" element={<ConnexionPME />} />
         <Route path="/pme/dashboard" element={
-          <ProtectedRoute>
-            <Layout><DashboardPME /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME><LayoutPME><DashboardPME /></LayoutPME></ProtectedRoutePME>
         } />
-        {/* Nouvelle transaction */}
         <Route path="/pme/nouvelle-transaction" element={
-          <ProtectedRoute>
-            <Layout><NouvelleTransaction /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME><LayoutPME><NouvelleTransaction /></LayoutPME></ProtectedRoutePME>
         } />
-        {/* Score BCX */}
         <Route path="/pme/score" element={
-          <ProtectedRoute>
-            <Layout><ScoreBCX /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME><LayoutPME><ScoreBCX /></LayoutPME></ProtectedRoutePME>
         } />
-        {/* Rapport mensuel */}
         <Route path="/pme/rapport" element={
-          <ProtectedRoute>
-            <Layout><RapportMensuel /></Layout>
-          </ProtectedRoute>
+          <ProtectedRoutePME><LayoutPME><RapportMensuel /></LayoutPME></ProtectedRoutePME>
+        } />
+        <Route path="/pme/profil" element={
+          <ProtectedRoutePME><LayoutPME><ProfilPME /></LayoutPME></ProtectedRoutePME>
         } />
 
-        {/* Redirection par défaut */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* ── Redirection par défaut ─────────────────────────── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

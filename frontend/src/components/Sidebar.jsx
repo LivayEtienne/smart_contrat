@@ -106,8 +106,7 @@ export default function Sidebar() {
           
           {/* LOGO */}
           <div style={styles.logoBox}>
-            <span style={styles.logoText}>BCX</span>
-            <span style={styles.logoSub}>FINANCE</span>
+            <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 44, objectFit: 'contain' }} />
           </div>
 
           {/* USER INFO */}
