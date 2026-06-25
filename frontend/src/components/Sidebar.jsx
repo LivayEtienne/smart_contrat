@@ -107,7 +107,6 @@ export default function Sidebar() {
 
           {/* LOGO */}
           <div style={styles.logoBox}>
-            <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 44, objectFit: 'contain' }} />
             <Link to="/">
               <img
                 src="/logo-optimized.png"

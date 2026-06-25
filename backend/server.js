@@ -19,7 +19,6 @@ if (envResult.error) {
 console.log('Loaded env file:', envLoaded || 'none');
 console.log('JWT_SECRET present:', Boolean(process.env.JWT_SECRET));
 
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -27,10 +26,8 @@ const { sequelize } = require('./models');
 
 const app = express();
 
-// ── SÉCURITÉ (HELMET) ──────────────────────────────────────────
 app.use(helmet());
 
-// ── CORS STRICT ────────────────────────────────────────────────
 const corsOptions = {
   origin: process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',') : false,
   optionsSuccessStatus: 200
@@ -39,101 +36,83 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-// ── LOGGER MIDDLEWARE ──────────────────────────────────────────
 app.use((req, res, next) => {
   const start = Date.now();
-  console.log(`\n📨 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
   if (req.body && Object.keys(req.body).length > 0) {
-    console.log('📦 Body:', JSON.stringify(req.body, null, 2));
+    console.log('Body:', JSON.stringify(req.body, null, 2));
   }
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const emoji = res.statusCode < 400 ? '✅' : '❌';
-    console.log(`${emoji} [${res.statusCode}] ${req.method} ${req.url} — ${duration}ms`);
+    const status = res.statusCode < 400 ? 'OK' : 'ERROR';
+    console.log(`${status} [${res.statusCode}] ${req.method} ${req.url} - ${duration}ms`);
 
-    // Logs de sécurité dédiés
     if (res.statusCode === 429) {
-      console.warn(`🚨 [SECURITY] Déclenchement du Rate Limiter sur ${req.url} - IP: ${req.ip}`);
+      console.warn(`[SECURITY] Declenchement du Rate Limiter sur ${req.url} - IP: ${req.ip}`);
     }
     if (res.statusCode === 401) {
-      console.warn(`🚨 [SECURITY] Tentative d'accès non autorisé sur ${req.url} - IP: ${req.ip}`);
+      console.warn(`[SECURITY] Tentative d'acces non autorise sur ${req.url} - IP: ${req.ip}`);
     }
     if (res.statusCode === 403 && req.url.includes('/admin')) {
-      console.warn(`🚨 [SECURITY] Accès refusé à une route admin sur ${req.url} - IP: ${req.ip}`);
+      console.warn(`[SECURITY] Acces refuse a une route admin sur ${req.url} - IP: ${req.ip}`);
     } else if (res.statusCode === 403) {
-      console.warn(`🚨 [SECURITY] Accès interdit sur ${req.url} - IP: ${req.ip}`);
+      console.warn(`[SECURITY] Acces interdit sur ${req.url} - IP: ${req.ip}`);
     }
   });
   next();
 });
 
-// ── ROUTES ─────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/depots', require('./routes/depot'));
 app.use('/api/ayants-droit', require('./routes/ayantDroitRoute'));
 app.use('/api/admin', require('./routes/admin'));
-
-// ── MODULE PME — Groupe 1 (Parfait Eric Yao) ──────────────────
 app.use('/api/pme', require('./routes/pme'));
 
-// ── TEST ROUTE ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({ message: 'BCX Finance API is running' });
 });
 
-// ── 404 HANDLER ───────────────────────────────────────────────
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
 app.use((req, res) => {
-  console.log(`⚠️  Route introuvable : ${req.method} ${req.url}`);
+  console.log(`Route introuvable : ${req.method} ${req.url}`);
   res.status(404).json({ success: false, message: `Route ${req.url} introuvable` });
 });
 
-// ── GLOBAL ERROR HANDLER ──────────────────────────────────────
 const errorHandler = require('./middlewares/errorMiddleware');
 app.use(errorHandler);
 
-// ── DÉMARRAGE ─────────────────────────────────────────────────
 const PORT = process.env.PORT || 3003;
 
 sequelize.authenticate()
   .then(() => {
-    console.log('✅ Base de données connectée');
+    console.log('Base de donnees connectee');
     app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-      console.log(`📡 URL : http://localhost:${PORT}`);
-      console.log('─────────────────────────────────────');
+      console.log(`Serveur demarre sur le port ${PORT}`);
+      console.log(`URL : http://localhost:${PORT}`);
       console.log('Routes disponibles :');
       console.log('  POST   /api/auth/inscription');
       console.log('  POST   /api/auth/connexion');
-      console.log('  ─────────────────────────────');
       console.log('  POST   /api/depots');
       console.log('  GET    /api/depots');
       console.log('  GET    /api/depots/compte');
-      console.log('  ─────────────────────────────');
       console.log('  GET    /api/depots/admin/tous');
       console.log('  PUT    /api/depots/:id/valider');
       console.log('  PUT    /api/depots/:id/refuser');
-      console.log('  ─────────────────────────────');
       console.log('  POST   /api/ayants-droit');
       console.log('  GET    /api/ayants-droit');
       console.log('  GET    /api/ayants-droit/admin/tous');
       console.log('  PUT    /api/ayants-droit/:id/valider');
       console.log('  PUT    /api/ayants-droit/:id/refuser');
-      console.log('  ─────────────────────────────');
       console.log('  POST   /api/pme/inscription');
       console.log('  POST   /api/pme/connexion');
       console.log('  GET    /api/pme/dashboard');
       console.log('  POST   /api/pme/transactions');
       console.log('  GET    /api/pme/score');
       console.log('  GET    /api/pme/rapport-pdf');
-      console.log('─────────────────────────────────────');
     });
   })
   .catch(err => {
-    console.error('❌ Erreur de connexion à la base de données :', err.message);
+    console.error('Erreur de connexion a la base de donnees :', err.message);
     process.exit(1);
   });
-<<<<<<< groupe1
-=======
-
-app.get('/favicon.ico', (req, res) => res.sendStatus(204));
->>>>>>> develop

@@ -85,9 +85,6 @@ export default function AdminPanel() {
     <div style={styles.page}>
       {/* BARRE DE NAVIGATION */}
       <nav style={styles.nav}>
-<<<<<<< groupe1
-        <img src="/logo.jpeg" alt="BCX Finance" style={{ height: 36, objectFit: 'contain' }} />
-=======
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <img
             src="/logo-optimized.png"
@@ -97,7 +94,6 @@ export default function AdminPanel() {
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           />
         </Link>
->>>>>>> develop
         <div style={styles.navRight}>
           <div style={{ textAlign: 'right' }}>
             <p style={styles.navUser}>{user.prenom} {user.nom}</p>

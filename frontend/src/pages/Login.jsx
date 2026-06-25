@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 
 export default function Login() {
@@ -27,7 +27,6 @@ export default function Login() {
   };
 
   return (
-<<<<<<< groupe1
     <div style={S.root}>
       <style>{`
         @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
@@ -37,7 +36,6 @@ export default function Login() {
         @media(max-width:860px){ .login-gauche { display:none !important; } }
       `}</style>
 
-      {/* ── GAUCHE — Brand panel ── */}
       <div className="login-gauche" style={S.gauche}>
         <img
           src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=1100&fit=crop&q=85"
@@ -59,55 +57,13 @@ export default function Login() {
                 </div>
               ))}
             </div>
-=======
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.logoBox}>
-          <Link to="/">
-            <img 
-              src="/logo-optimized.png" 
-              alt="BCX Finance" 
-              style={{ height: '80px', objectFit: 'contain', filter: 'drop-shadow(0 4px 12px rgba(212,175,55,0.2))', transition: 'transform 0.3s ease' }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            />
-          </Link>
-        </div>
-        <p style={styles.tagline}>Cercle des Investisseurs</p>
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
-            <input
-              style={styles.input}
-              type="email"
-              placeholder="votre@email.com"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-          </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Mot de passe</label>
-            <input
-              style={styles.input}
-              type="password"
-              placeholder="••••••••"
-              value={form.mot_de_passe}
-              onChange={(e) => setForm({ ...form, mot_de_passe: e.target.value })}
-              required
-            />
->>>>>>> develop
           </div>
           <p style={S.gFooter}>© 2026 BCX Finance · Fintech Apprentice Africa</p>
         </div>
       </div>
 
-      {/* ── DROITE — Formulaire ── */}
       <div style={S.droite}>
         <div style={S.formWrap}>
-
-          {/* Header mobile */}
           <div style={S.mLogo} onClick={() => navigate('/')}><img src="/logo.jpeg" alt="BCX Finance" style={{ height: 40, objectFit: 'contain' }} /></div>
 
           <div style={{ animation: 'fadeUp 0.4s ease' }}>
@@ -116,7 +72,6 @@ export default function Login() {
             <p style={S.sous}>Connectez-vous à votre espace investisseur.</p>
 
             <form onSubmit={handleSubmit} style={S.form}>
-
               <div style={S.field}>
                 <label style={S.label}>Adresse email</label>
                 <div style={S.inputWrap}>

@@ -1,339 +1,452 @@
-# BCX Token
+# BCX Finance
 
-Smart Contract du **BCX Token**, le token utilitaire de l'écosystème **BCX Finance**, développé en Solidity et conforme au standard **BEP-20** sur la Binance Smart Chain (BSC).
+BCX Finance est une plateforme web complete qui regroupe deux univers metiers :
 
-Le BCX Token constitue une clé d'accès aux différents services proposés par BCX Finance. Sa valeur est liée à son utilité au sein de l'écosystème et non à une logique purement spéculative.
+- Univers Investisseur
+- Univers PME
 
-# Informations du Token
+Le projet combine un backend Node.js/Express, un frontend React/Vite, une base de donnees MySQL geree avec Sequelize, et une integration blockchain sur Ethereum Sepolia via `ethers.js` et MetaMask.
 
-- **Nom :** BCX Token
-- **Symbole :** BCX
-- **Standard :** BEP-20
-- **Blockchain cible :** Binance Smart Chain (BSC)
-- **Version Solidity :** 0.8.20
-- **Décimales :** 18
-- **Supply totale :** 100 000 000 BCX
-- **Mint supplémentaire :** Désactivé
-- **Burn :** Activé
-- **Lock-up Pioneer :** 365 jours
-- **Contrôle d'accès administrateur :** Oui
-- **Protection contre la réentrance :** Oui
+## Objectifs du projet
 
----
+- Permettre a un investisseur de creer un compte, se connecter, suivre ses depots et gerer ses ayants droit.
+- Permettre a une PME de gerer ses recettes, depenses, Score BCX et rapports mensuels.
+- Centraliser les traitements metier dans un backend unique sans conflit entre les deux univers.
+- Exposer une couche de securite solide pour l'authentification, la validation et les acces admin.
+- Conserver une integration blockchain pour les operations liees aux tokens BCX et au wallet.
 
-# Fonctionnalités
+## Architecture globale
 
-## Implémentation complète du standard BEP-20
+La solution est organisee autour de trois blocs :
 
-Le contrat implémente toutes les fonctions essentielles du standard BEP-20 :
+1. Backend API
+   - Express 5
+   - Authentification JWT
+   - Sequelize + MySQL
+   - middlewares de securite
 
-- `totalSupply()`
-- `balanceOf()`
-- `transfer()`
-- `approve()`
-- `allowance()`
-- `transferFrom()`
+2. Frontend web
+   - React 19 + Vite
+   - React Router DOM
+   - pages Investisseur et PME
+   - integration MetaMask / ethers.js
 
-Cette implémentation garantit la compatibilité du token avec les wallets, les exchanges et les applications de l'écosystème Binance Smart Chain.
+3. Blockchain
+   - contrat `BCXToken.sol`
+   - outils Hardhat
+   - reseaux Sepolia et BSC Testnet configures dans le repo
 
-## Supply fixe
+## Technologies utilisees
 
-Le BCX Token possède une offre totale fixe de :
+### Backend
+
+- Node.js
+- Express 5
+- Sequelize 6
+- MySQL2
+- jsonwebtoken
+- bcryptjs
+- helmet
+- cors
+- express-rate-limit
+- express-validator
+- dotenv
+- ethers
+
+### Frontend
+
+- React 19
+- Vite
+- React Router DOM 7
+- Axios
+- ethers.js
+- Recharts
+- lucide-react
+
+### Blockchain / Dev tooling
+
+- Solidity 0.8.20
+- Hardhat
+- Hardhat Toolbox
+- Sepolia
+- BSC Testnet
+
+## Structure des dossiers
 
 ```text
-100 000 000 BCX
+smart_contrat/
+|-- backend/
+|   |-- config/
+|   |-- controllers/
+|   |-- middlewares/
+|   |-- migrations/
+|   |-- models/
+|   |-- routes/
+|   |-- seeders/
+|   |-- services/
+|   |-- server.js
+|   |-- package.json
+|   `-- package-lock.json
+|-- frontend/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- pages/
+|   |   |-- pme/
+|   |   |-- services/
+|   |   `-- App.jsx
+|   |-- package.json
+|   `-- package-lock.json
+|-- contracts/
+|   `-- BCXToken.sol
+|-- scripts/
+|   |-- deploy.js
+|   `-- interact.js
+|-- test/
+|-- hardhat.config.js
+`-- README.md
 ```
 
-La totalité des tokens est créée lors du déploiement du contrat.
+## Module Investisseur (Groupe 2)
 
-Aucune fonction de création supplémentaire (`mint`) n'est présente afin de garantir une émission contrôlée et transparente.
+L'univers Investisseur couvre :
 
-## Mécanisme de Burn
+- inscription et connexion investisseur
+- connexion admin
+- creation et consultation des depots
+- mise a jour du wallet
+- gestion des ayants droit
+- panneau admin pour la validation des depots et ayants droit
+- statistiques admin globales
 
-Le contrat permet la destruction définitive des tokens.
+### Fonctionnalites principales
 
-Fonctions disponibles :
+- authentification JWT avec role `investisseur` ou `admin`
+- depot voie A et voie B
+- consultation du compte et du solde BCX
+- gestion du wallet investisseur
+- gestion des ayants droit
+- validation / refus cote admin
+- tableau de bord admin avec statistiques globales
 
-- `burn()`
-- `burnFrom()`
+## Module PME (Groupe 1)
 
-Chaque opération de burn :
+L'univers PME couvre :
 
-- réduit le solde du détenteur ;
-- diminue la supply totale ;
-- est enregistrée sur la blockchain.
+- inscription PME
+- connexion PME
+- tableau de bord PME
+- saisie de transactions
+- calcul du Score BCX
+- rapport mensuel
+- profil PME
 
-## Système de Lock-up des Pionniers
+### Fonctionnalites principales
 
-Le contrat intègre un mécanisme de verrouillage des tokens destiné aux Pionniers.
+- authentification JWT dediee au role `pme`
+- dashboard PME avec resume financier
+- suivi des revenus et depenses
+- Score BCX calcule sur 4 criteres
+- export / consultation du rapport mensuel
+- mode hors ligne et cache local cote frontend
 
-Caractéristiques :
+## Architecture Backend
 
-- durée minimale de 365 jours ;
-- les tokens verrouillés ne peuvent ni être transférés ni être brûlés ;
-- déverrouillage uniquement après expiration de la période définie.
+Le backend monte un serveur Express unique dans `backend/server.js`.
 
-Fonctions associées :
+Routes montees :
 
-- `lockTokens()`
-- `unlockTokens()`
-- `getLockInfo()`
-- `availableBalance()`
+- `/api/auth`
+- `/api/depots`
+- `/api/ayants-droit`
+- `/api/admin`
+- `/api/pme`
 
-## Gestion des autorisations
+Mecanismes transverses :
 
-Le contrat prend en charge :
+- `helmet()` pour la protection HTTP
+- `cors()` avec origine configurable
+- `express.json()` pour le parsing JSON
+- logger applicatif et logs de securite
+- gestion centralisee des erreurs
 
-- `approve()`
-- `increaseAllowance()`
-- `decreaseAllowance()`
-- `transferFrom()`
+## Architecture Frontend
 
-Des mécanismes supplémentaires sont mis en place afin de limiter les risques liés aux autorisations.
+Le frontend est une SPA React structuree autour de React Router.
 
-## Blacklist
+Les zones principales sont :
 
-Le propriétaire du contrat peut ajouter ou retirer certaines adresses de la liste noire.
+- espace public
+- espace investisseur
+- espace admin
+- espace PME
 
-Une adresse blacklistée :
+Le routing principal est defini dans `frontend/src/App.jsx`.
 
-- ne peut plus envoyer de tokens ;
-- ne peut plus recevoir de tokens.
+Pages Investisseur / Admin principales :
 
-Fonctions disponibles :
+- `/login`
+- `/inscription`
+- `/dashboard`
+- `/depot/nouveau`
+- `/depot/mes-depots`
+- `/profil`
+- `/ayants-droit`
+- `/tableau-bord`
+- `/admin`
 
-- `setBlacklist()`
-- `isBlacklisted()`
+Pages PME principales :
 
-# Sécurité
+- `/pme/inscription`
+- `/pme/connexion`
+- `/pme/dashboard`
+- `/pme/nouvelle-transaction`
+- `/pme/score`
+- `/pme/rapport`
+- `/pme/profil`
 
-Le contrat intègre plusieurs mécanismes de sécurité :
+## Securite implemente
 
-### Protection contre la réentrance
+- Helmet : durcissement des en-tetes HTTP
+- CORS : restrictions via `CORS_ALLOWED_ORIGINS`
+- Rate Limiting : protection de `POST /api/auth/connexion`
+- Validation des entrees : `express-validator`
+- Gestion centralisee des erreurs : middleware global
+- JWT : protection des routes privees
+- bcryptjs : hashage des mots de passe
+- logs de securite : 401, 403, 429
 
-Les fonctions sensibles sont protégées grâce au module `ReentrancyGuard`.
+## Integration Blockchain
 
-### Contrôle d'accès
+### Cote frontend
 
-Le module `Ownable` permet de restreindre certaines opérations critiques au propriétaire du contrat.
+- `MetaMask` est detecte et utilise pour la connexion au wallet
+- `ethers.js` est utilise dans `frontend/src/services/web3.js`
+- le reseau attendu est `Sepolia` (`chainId 11155111`)
+- lecture du solde BCX on-chain
+- envoi de depots crypto via MetaMask
 
-Ces opérations concernent notamment :
+### Cote backend
 
-- le verrouillage des tokens ;
-- la gestion de la blacklist ;
-- le transfert de propriété.
+- `backend/services/tokenService.js` utilise `ethers`
+- lecture du RPC Sepolia via `SEPOLIA_RPC_URL`
+- signature des transactions via `PRIVATE_KEY`
+- transfert de BCX vers le wallet de l'investisseur
+- calcul des tokens attribues
+
+### BCX Token
+
+Le contrat `contracts/BCXToken.sol` est un token EVM de type BCX, deploye via Hardhat et exploite dans l'ecosysteme BCX Finance.
+
+## Base de donnees et modeles Sequelize
+
+### Modeles backend
+
+- `Investisseur`
+- `Compte`
+- `Depot`
+- `AyantDroit`
+- `ConversionToken`
+- `TauxConversion`
+- `PME`
+- `TransactionPME`
+
+### Relations
+
+- `Investisseur` hasOne `Compte`
+- `Investisseur` hasMany `Depot`
+- `Investisseur` hasMany `AyantDroit`
+- `Depot` belongsTo `Investisseur`
+- `Depot` hasOne `ConversionToken`
+- `Compte` belongsTo `Investisseur`
+- `AyantDroit` belongsTo `Investisseur`
+- `PME` hasMany `TransactionPME`
+- `TransactionPME` belongsTo `PME`
+- `ConversionToken` belongsTo `Depot`
+- `ConversionToken` belongsTo `TauxConversion`
+- `TauxConversion` hasMany `ConversionToken`
+
+Les modeles sont auto-charges par `backend/models/index.js`.
+
+## Variables d'environnement requises
+
+### Backend / Root
+
 ```env
-SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-PRIVATE_KEY=<fournie par le Product Manager>
 DB_HOST=localhost
-DB_USER=<ton utilisateur MySQL>
-DB_PASSWORD=<ton mot de passe MySQL>
+DB_USER=<mysql_user>
+DB_PASSWORD=<mysql_password>
 DB_NAME=bcx_finance
 DB_DIALECT=mysql
-JWT_SECRET=<fournie par le Product Manager>
+JWT_SECRET=<secret>
 PORT=3003
 CORS_ALLOWED_ORIGINS=http://localhost:5173
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+PRIVATE_KEY=<private_key_sans_0x>
+NODE_ENV=development
 ```
 
-La PRIVATE_KEY et le JWT_SECRET sont fournis directement par le Product Manager à chaque membre. Ils ne doivent jamais apparaître dans le code source ni dans un commit GitHub. Vérifier que .env est bien dans le .gitignore avant tout push.
+### Frontend
 
-### Protection contre l'adresse zéro
+```env
+VITE_BCX_CONTRACT_ADDRESS=<adresse_du_contrat_sur_sepolia>
+```
 
-Le contrat empêche :
+## Procedure d'installation
 
-- les transferts vers l'adresse zéro ;
-- les approbations vers l'adresse zéro ;
-- certaines opérations invalides.
+### 1. Installer les dependances racine
+
+```bash
+npm install
+```
+
+### 2. Installer le backend
+
 ```bash
 cd backend
 npm install
 ```
 
-> ⚠️ **Étape critique — Ne pas sauter !**
-> Sans ces deux commandes, la base de données sera vide et aucun compte ne fonctionnera.
-> ```bash
-> npx sequelize-cli db:migrate
-> npx sequelize-cli db:seed:all
-> ```
+### 3. Installer le frontend
+
+```bash
+cd frontend
+npm install
+```
+
+## Procedure de migration Sequelize
+
+Depuis le dossier `backend` :
+
+```bash
+npx sequelize-cli db:migrate
+npx sequelize-cli db:seed:all
+```
+
+Les seeders fournissent notamment :
+
+- un compte admin `finance@bcx.com`
+- un compte investisseur `investisseur@bcx.com`
+
+## Procedure de lancement Backend
+
+Depuis le dossier `backend` :
+
+```bash
+npm run start
+```
+
+ou :
 
 ```bash
 npm run dev
 ```
 
-### Protection des soldes verrouillés
+Le serveur ecoute par defaut sur le port `3003`.
 
-Les tokens faisant l'objet d'un lock-up ne peuvent pas être utilisés avant leur date de déverrouillage.
+## Procedure de lancement Frontend
 
-### Vérification des montants
-
-Le contrat contrôle :
-
-- les montants positifs ;
-- les soldes disponibles ;
-- les autorisations suffisantes.
-
-### Protection contre les appels invalides
-
-Le contrat rejette :
-
-- les appels vers des fonctions inexistantes ;
-- les envois accidentels de BNB.
-
----
-
-# Architecture du projet
-
-````text
-BCXToken
-│
-├── contracts
-│   └── BCXToken.sol
-│
-├── test
-│   └── BCXToken.test.js
-│
-├── scripts
-│   └── deploy.js
-│
-├── hardhat.config.js
-│
-├── package.json
-│
-└── README.md
-
-
-# Installation
-
-Cloner le dépôt :
-
-git clone <repository-url>
-
-Accéder au projet :
+Depuis le dossier `frontend` :
 
 ```bash
-cd BCXToken
-
-Installer les dépendances :
-
-```bash
-npm install
-npx hardhat run scripts/deploy.js --network bscTestnet
+npm run dev
 ```
 
-
-## Endpoints API disponibles
-
-Le backend expose les routes suivantes sur http://localhost:3003.
-
-Auth :
-POST /api/auth/inscription
-POST /api/auth/connexion
-
-Dépôts (investisseur) :
-POST /api/depots
-GET /api/depots
-GET /api/depots/compte
-PUT /api/depots/wallet
-
-Dépôts (admin) :
-GET /api/depots/admin/tous
-GET /api/depots/admin/transactions
-PUT /api/depots/:id/valider
-PUT /api/depots/:id/refuser
-
-Ayants droit (investisseur) :
-POST /api/ayants-droit
-GET /api/ayants-droit
-
-Ayants droit (admin) :
-GET /api/ayants-droit/admin/tous
-PUT /api/ayants-droit/:id/valider
-PUT /api/ayants-droit/:id/refuser
-
-Statistiques (admin) :
-GET /api/admin/stats
-  Retourne les statistiques globales (total_investisseurs, total_depots, total_bcx_distribues)
-
-
-## Sécurité de l'API (Mises à jour)
-
-- **Helmet & CORS** : Protection contre les vulnérabilités XSS et Clickjacking, et restriction des requêtes cross-origin via la variable `CORS_ALLOWED_ORIGINS`.
-- **Validation (express-validator)** : Toutes les données POST sont validées et nettoyées avant traitement métier.
-- **Rate Limiting** : La route de connexion est limitée à 5 tentatives par 15 minutes pour éviter le brute force.
-- **Gestion des erreurs** : Un middleware centralise et formatte les erreurs au format `{ "success": false, "message": "..." }`.
-
-## Comptes de test
-
-Admin : finance@bcx.com / Admin1234@
-Investisseur : investisseur@bcx.com / Test1234@ 
- 
-
-
-## Intégration Backend (Node.js + ethers.js)
-
----
-
-# Compilation
+Pour un build de production :
 
 ```bash
-npx hardhat compile
+npm run build
+```
 
----
+## Routes API principales
 
-# Exécution des tests
+### Auth
 
-```bash
-npx hardhat test
+- `POST /api/auth/inscription`
+- `POST /api/auth/connexion`
 
----
+### Depots
 
-# Déploiement sur Binance Smart Chain Testnet
+- `POST /api/depots`
+- `GET /api/depots`
+- `GET /api/depots/compte`
+- `PUT /api/depots/wallet`
+- `GET /api/depots/admin/tous`
+- `PUT /api/depots/:depot_id/valider`
+- `PUT /api/depots/:depot_id/refuser`
 
-```bash
-npx hardhat run scripts/deploy.js --network bscTestnet
-````
+### Ayants droit
 
-Après le déploiement, l'adresse du contrat pourra être vérifiée sur BscScan.
+- `POST /api/ayants-droit`
+- `GET /api/ayants-droit`
+- `GET /api/ayants-droit/admin/tous`
+- `PUT /api/ayants-droit/:id/valider`
+- `PUT /api/ayants-droit/:id/refuser`
 
----
+### Admin
 
-# Tests réalisés
+- `GET /api/admin/stats`
 
-Les tests couvrent notamment :
+### PME
 
-- le déploiement du contrat ;
-- la vérification du nom, du symbole et des décimales ;
-- la validation de la supply totale ;
-- les transferts de tokens ;
-- les soldes insuffisants ;
-- le lock-up des Pionniers ;
-- le déverrouillage après expiration ;
-- la fonctionnalité de burn ;
-- la réduction de la supply totale ;
-- la gestion de la blacklist ;
-- le contrôle d'accès administrateur.
+- `POST /api/pme/inscription`
+- `POST /api/pme/connexion`
+- `GET /api/pme/dashboard`
+- `POST /api/pme/transactions`
+- `GET /api/pme/score`
+- `GET /api/pme/rapport-pdf`
 
----
+## Comptes ou roles disponibles
 
-# Technologies utilisées
+### Roles applicatifs
 
-- Solidity 0.8.20
-- Hardhat
-- Ethers.js
-- Chai
-- JavaScript
-- Binance Smart Chain
+- `investisseur`
+- `admin`
+- `pme`
 
----
+### Comptes de demo seeder
 
-# Auteur
+- Admin : `finance@bcx.com` / `Admin1234@`
+- Investisseur : `investisseur@bcx.com` / `Test1234@`
 
-**Etienne Ba**
+### PME
 
-Projet réalisé dans le cadre de l'épreuve Blockchain de **FinTech Apprentice Africa**.
+- Les comptes PME sont crees via `POST /api/pme/inscription`
 
----
+## Repartition des responsabilites de l'equipe
 
-# Licence
+### Groupe 1 - Univers PME
 
-Licence MIT.
+- inscription / connexion PME
+- dashboard PME
+- transactions PME
+- Score BCX
+- rapport mensuel
+- profil PME
+- navigation et UI PME
+
+### Groupe 2 - Univers Investisseur
+
+- inscription / connexion investisseur
+- depots
+- ayants droit
+- wallet et MetaMask
+- administration des depots
+- statistiques admin
+- middleware de securite et validation
+
+## Etat actuel du projet
+
+Le projet fusionne maintenant deux univers complets dans une application unique :
+
+- l'univers Investisseur est conserve
+- l'univers PME est conserve
+- les routes backend sont montees sans conflit
+- le frontend compile correctement
+- la documentation suit l'etat reel du code apres fusion
+
+Le backend reste dependant d'une base MySQL accessible et d'un environnement correctement configure pour demarrer en execution complete.
+
+## Licence
+
+Licence du projet a definir selon le cadre de diffusion du depot.
