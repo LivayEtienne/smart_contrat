@@ -18,6 +18,7 @@ if (envResult.error) {
 
 console.log('Loaded env file:', envLoaded || 'none');
 console.log('JWT_SECRET present:', Boolean(process.env.JWT_SECRET));
+console.log('CORS origins:', process.env.CORS_ALLOWED_ORIGINS);
 
 const express = require('express');
 const cors = require('cors');
@@ -26,13 +27,19 @@ const { sequelize } = require('./models');
 
 const app = express();
 
-app.use(helmet());
-
+// ✅ CORS en premier — avant helmet et toutes les routes
 const corsOptions = {
-  origin: process.env.CORS_ALLOWED_ORIGINS ? process.env.CORS_ALLOWED_ORIGINS.split(',') : false,
-  optionsSuccessStatus: 200
+  origin: process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',')
+    : false,
+  credentials: true,
+  optionsSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
+
+// Helmet après CORS
+app.use(helmet());
 
 app.use(express.json());
 

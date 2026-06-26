@@ -4,14 +4,12 @@ const api = axios.create({
   baseURL: 'http://localhost:3003/api',
 });
 
-// Injecte le token JWT automatiquement
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Redirige vers /login si token expiré
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -24,16 +22,13 @@ api.interceptors.response.use(
   }
 );
 
+// ── AUTH UNIFIÉE (investisseur + PME) ─────────────────────────
 export const authService = {
   login: (data) => api.post('/auth/connexion', data),
   register: (data) => api.post('/auth/inscription', data),
 };
 
-export const pmeAuthService = {
-  connexion: (data) => api.post('/pme/connexion', data),
-  inscription: (data) => api.post('/pme/inscription', data),
-};
-
+// ── INVESTISSEUR ──────────────────────────────────────────────
 export const depotService = {
   creer: (data) => api.post('/depots', data),
   mesDepots: () => api.get('/depots'),
@@ -51,6 +46,15 @@ export const ayantsDroitService = {
 
 export const adminService = {
   getStats: () => api.get('/admin/stats'),
+};
+
+// ── PME ───────────────────────────────────────────────────────
+export const pmeService = {
+  inscription: (data) => api.post('/pme/inscription', data),
+  dashboard: () => api.get('/pme/dashboard'),
+  ajouterTransaction: (data) => api.post('/pme/transactions', data),
+  score: () => api.get('/pme/score'),
+  rapport: (annee, mois) => api.get(`/pme/rapport-pdf?annee=${annee}&mois=${mois}`),
 };
 
 export default api;

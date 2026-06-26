@@ -3,13 +3,25 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
 
-const couleurNote = (n) => n >= 75 ? '#4CAF50' : n >= 50 ? '#D4AF37' : '#FF4444';
+const couleurNote = (pts, max) => {
+  const pct = (pts / max) * 100;
+  return pct >= 75 ? '#4CAF50' : pct >= 50 ? '#D4AF37' : '#FF4444';
+};
+
 const labelScore = (s) => {
   if (s >= 80) return { texte: 'Excellent', couleur: '#4CAF50' };
   if (s >= 65) return { texte: 'Bon', couleur: '#D4AF37' };
   if (s >= 50) return { texte: 'Moyen', couleur: '#F5A623' };
   return { texte: 'À améliorer', couleur: '#FF4444' };
 };
+
+// Convertit l'objet details du backend en tableau affichable
+const detailsVersTableau = (details) => [
+  { critere: 'Ratio revenus / dépenses', pts: details.ratio,      max: 40, description: 'Santé financière — revenus supérieurs aux dépenses' },
+  { critere: 'Régularité',               pts: details.regularite, max: 30, description: 'Activité mensuelle constante sur la durée' },
+  { critere: 'Volume traité',            pts: details.volume,     max: 20, description: 'Taille de l\'activité en FCFA' },
+  { critere: 'Ancienneté',               pts: details.anciennete, max: 10, description: 'Stabilité dans le temps depuis la création' },
+];
 
 const CACHE_KEY = 'pme_score_cache';
 
@@ -22,7 +34,7 @@ export default function ScoreBCX() {
   useEffect(() => {
     const charger = async () => {
       try {
-        const token = localStorage.getItem('pme_token');
+        const token = localStorage.getItem('token'); // ← unifié, plus pme_token
         const response = await fetch('http://localhost:3003/api/pme/score', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -41,8 +53,16 @@ export default function ScoreBCX() {
     charger();
   }, []);
 
-  if (chargement) return <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#D4AF37', fontFamily: "'Inter',sans-serif" }}>Calcul du score...</p></div>;
-  if (!score) return <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#FF4444', fontFamily: "'Inter',sans-serif" }}>Impossible de charger le score.</p></div>;
+  if (chargement) return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#D4AF37', fontFamily: "'Inter',sans-serif" }}>Calcul du score...</p>
+    </div>
+  );
+  if (!score) return (
+    <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#FF4444', fontFamily: "'Inter',sans-serif" }}>Impossible de charger le score.</p>
+    </div>
+  );
 
   const label = labelScore(score.score);
   const donneesRadial = [
@@ -50,9 +70,14 @@ export default function ScoreBCX() {
     { value: 100 - score.score, fill: '#1a1a1a' },
   ];
 
+  // Convertit details (objet) en tableau pour le .map()
+  const detailsTableau = score.details ? detailsVersTableau(score.details) : [];
+
   return (
     <div style={s.page}>
-      {modeOffline && <div style={s.banniereOffline}>📡 Mode hors ligne — données depuis le cache local.</div>}
+      {modeOffline && (
+        <div style={s.banniereOffline}>📡 Mode hors ligne — données depuis le cache local.</div>
+      )}
 
       <button style={s.btnRetour} onClick={() => navigate('/pme/dashboard')}>← Retour</button>
       <p style={s.label}>CRÉDIBILITÉ</p>
@@ -72,29 +97,58 @@ export default function ScoreBCX() {
               <span style={s.scoreSur}>/100</span>
             </div>
           </div>
+
           <div style={s.scoreInfos}>
             <p style={s.label}>NIVEAU</p>
             <p style={{ ...s.scoreLabel, color: label.couleur }}>{label.texte}</p>
             <p style={{ color: '#555', fontSize: '13px', margin: '4px 0 16px' }}>{score.niveau}</p>
-            <div style={score.eligibilite_credit ? s.badgeOk : s.badgeKo}>
-              {score.eligibilite_credit ? '✅ Éligible au crédit BCX' : "❌ Non éligible pour l'instant"}
+            {/* eligibilite_credit n'existe pas dans le backend — on la calcule côté front */}
+            <div style={score.score >= 50 ? s.badgeOk : s.badgeKo}>
+              {score.score >= 50 ? '✅ Éligible au crédit BCX' : "❌ Non éligible pour l'instant"}
             </div>
           </div>
         </div>
       </div>
 
-      {/* DÉTAILS */}
+      {/* STATS RAPIDES */}
+      {score.stats && (
+        <div style={s.statsGrid}>
+          {[
+            { label: 'Revenus', valeur: score.stats.total_revenus.toLocaleString('fr-FR') + ' FCFA' },
+            { label: 'Dépenses', valeur: score.stats.total_depenses.toLocaleString('fr-FR') + ' FCFA' },
+            { label: 'Solde', valeur: score.stats.solde.toLocaleString('fr-FR') + ' FCFA' },
+            { label: 'Transactions', valeur: score.stats.nb_transactions },
+            { label: 'Mois actifs', valeur: score.stats.mois_actifs },
+            { label: 'Ancienneté', valeur: score.stats.anciennete_mois + ' mois' },
+          ].map(({ label, valeur }) => (
+            <div key={label} style={s.statBox}>
+              <span style={s.statLabel}>{label}</span>
+              <span style={s.statValeur}>{valeur}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* DÉTAILS PAR CRITÈRE */}
       <p style={s.label}>DÉTAIL</p>
       <h2 style={s.titreSec}>Analyse par critère</h2>
       <div style={s.listeDetails}>
-        {(score.details || []).map((d) => (
+        {detailsTableau.map((d) => (
           <div key={d.critere} style={s.carteDetail}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
               <span style={{ color: '#ccc', fontSize: '14px', fontWeight: '500' }}>{d.critere}</span>
-              <span style={{ color: couleurNote(d.note), fontWeight: '700', fontSize: '14px' }}>{d.note}/100</span>
+              <span style={{ color: couleurNote(d.pts, d.max), fontWeight: '700', fontSize: '14px' }}>
+                {d.pts} / {d.max} pts
+              </span>
             </div>
             <div style={{ height: '4px', background: '#1a1a1a', borderRadius: '2px', marginBottom: '8px' }}>
-              <div style={{ width: `${d.note}%`, height: '100%', background: couleurNote(d.note), borderRadius: '2px', transition: 'width 0.6s ease' }} />
+              <div style={{
+                width: `${(d.pts / d.max) * 100}%`,
+                height: '100%',
+                background: couleurNote(d.pts, d.max),
+                borderRadius: '2px',
+                transition: 'width 0.6s ease'
+              }} />
             </div>
             <p style={{ color: '#444', fontSize: '12px', margin: 0 }}>{d.description}</p>
           </div>
@@ -106,7 +160,12 @@ export default function ScoreBCX() {
         <p style={s.label}>AMÉLIORATION</p>
         <h2 style={s.titreSec}>Comment progresser ?</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
-          {['Enregistrez vos transactions chaque jour', 'Gardez un solde positif chaque mois', 'Complétez votre profil PME (RCCM)', 'Remboursez vos crédits dans les délais'].map((c) => (
+          {[
+            'Enregistrez vos transactions chaque jour',
+            'Gardez un solde positif chaque mois',
+            'Complétez votre profil PME (RCCM)',
+            'Remboursez vos crédits dans les délais',
+          ].map((c) => (
             <div key={c} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
               <span style={{ color: '#D4AF37', fontSize: '14px', marginTop: '1px' }}>→</span>
               <span style={{ color: '#666', fontSize: '14px' }}>{c}</span>
@@ -125,7 +184,7 @@ const s = {
   label: { color: '#D4AF37', fontSize: '10px', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 6px' },
   titre: { color: '#fff', fontSize: '26px', fontWeight: '700', margin: '0 0 24px' },
   titreSec: { color: '#fff', fontSize: '16px', fontWeight: '600', margin: '0 0 16px' },
-  carteScore: { background: '#111', border: '1px solid #1a1a1a', borderRadius: '16px', padding: '32px', marginBottom: '32px', boxShadow: '0 4px 32px rgba(212,175,55,0.06)' },
+  carteScore: { background: '#111', border: '1px solid #1a1a1a', borderRadius: '16px', padding: '32px', marginBottom: '24px', boxShadow: '0 4px 32px rgba(212,175,55,0.06)' },
   scoreLayout: { display: 'flex', alignItems: 'center', gap: '32px', flexWrap: 'wrap' },
   scoreCenter: { position: 'absolute', top: '50%', left: '90px', transform: 'translate(-50%, -50%)', textAlign: 'center' },
   scoreNombre: { fontSize: '38px', fontWeight: '900', display: 'block' },
@@ -134,6 +193,10 @@ const s = {
   scoreLabel: { fontSize: '30px', fontWeight: '800', margin: '4px 0 0' },
   badgeOk: { background: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: '8px', color: '#4CAF50', display: 'inline-block', fontSize: '13px', padding: '8px 16px' },
   badgeKo: { background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.25)', borderRadius: '8px', color: '#FF4444', display: 'inline-block', fontSize: '13px', padding: '8px 16px' },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '32px' },
+  statBox: { background: '#111', border: '1px solid #1a1a1a', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
+  statLabel: { color: '#444', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' },
+  statValeur: { color: '#fff', fontSize: '15px', fontWeight: '700' },
   listeDetails: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' },
   carteDetail: { background: '#111', border: '1px solid #1a1a1a', borderRadius: '12px', padding: '18px', boxShadow: '0 2px 12px rgba(0,0,0,0.2)' },
   carteConseils: { background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.1)', borderLeft: '3px solid #D4AF37', borderRadius: '12px', padding: '24px', marginBottom: '32px' },
